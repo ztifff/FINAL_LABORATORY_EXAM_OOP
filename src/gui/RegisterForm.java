@@ -11,11 +11,13 @@ import system.SavingsAccount;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class RegisterForm extends JFrame {
 
     public RegisterForm() {
-    	setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\Downloads/icon.jpg"));
+    	setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\Downloads/bank.png"));
         setTitle("Northland Bank Account Registration Form");
         setSize(550, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -41,13 +43,14 @@ public class RegisterForm extends JFrame {
         JPanel personalPanel = createFormPanel("Personal Information");
 
         JTextField fullNameField = createTextField();
-        JTextField dobField = createTextField();
+        JSpinner dobSpinner = new JSpinner(new SpinnerDateModel());
+        dobSpinner.setEditor(new JSpinner.DateEditor(dobSpinner, "yyyy-MM-dd")); 
         JTextField phoneField = createTextField();
         JTextField emailField = createTextField();
         JTextField addressField = createTextField();
 
         addFormRow(personalPanel, "Full Name:", fullNameField);
-        addFormRow(personalPanel, "Date of Birth:", dobField);
+        addFormRow(personalPanel, "Date of Birth:", dobSpinner);
         addFormRow(personalPanel, "Phone Number:", phoneField);
         addFormRow(personalPanel, "Email Address:", emailField);
         addFormRow(personalPanel, "Address:", addressField);
@@ -133,7 +136,8 @@ public class RegisterForm extends JFrame {
         
         createAccountButton.addActionListener(e -> {
             String fullName = fullNameField.getText().trim();
-            String dob = dobField.getText().trim();
+            Date dobDate = (Date) dobSpinner.getValue();
+            String dob = new SimpleDateFormat("yyyy-MM-dd").format(dobDate); 
             String phone = phoneField.getText().trim();
             String email = emailField.getText().trim();
             String address = addressField.getText().trim();
@@ -147,6 +151,16 @@ public class RegisterForm extends JFrame {
                 (!savingsButton.isSelected() && !checkingButton.isSelected())) {
                 
                 JOptionPane.showMessageDialog(this, "Please complete all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            if (!phone.matches("\\d{10,11}")) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid phone number (10-11 digits).", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!email.contains("@") || !email.contains(".com")) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid email address.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -177,11 +191,11 @@ public class RegisterForm extends JFrame {
 
             account.deposit(deposit);
 
-            // Store via factory
+            
             AccountFactory.registerAccount(account);
 
             JOptionPane.showMessageDialog(this, "Account created successfully!\nYour Account Number: " + account.getAccountNumber());
-            dispose(); // Close the register form
+            dispose(); 
             Login login = new Login();
             login.setVisible(true);
             login.setLocationRelativeTo(null);

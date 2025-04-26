@@ -7,6 +7,7 @@ public class Account {
     private double balance;
     private TransactionHistory history;
     private Customer owner;
+    private Admin admin;
 
     public Account(Customer owner) {
         this.accountNumber = UUID.randomUUID().toString().substring(0, 8); // Random 8-char ID
@@ -15,11 +16,19 @@ public class Account {
         this.owner = owner;
     }
     
+    public Account(Admin admin) {
+    	this.admin = admin;
+	}
+    
     public Customer getOwner() {
         return owner;
     }
+    
+    public Admin getAdmin() {
+		return admin;
+	}
 
-    public String getAccountNumber() {
+	public String getAccountNumber() {
         return accountNumber;
     }
 

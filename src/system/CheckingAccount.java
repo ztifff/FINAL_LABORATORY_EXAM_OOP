@@ -8,7 +8,7 @@ public class CheckingAccount extends Account {
 
     @Override
     public boolean withdraw(double amount) {
-        // Example: checking account allows overdraft up to -500
+        
         if (amount <= getBalance() + 500) {
             super.withdraw(amount);
             return true;

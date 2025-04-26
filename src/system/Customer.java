@@ -37,6 +37,18 @@ public class Customer {
 		return contactNumber;
 	}
 
+	public String getEmail() {
+		return email;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
 	public void setId(String id) {
 		this.id = id;
 	}

@@ -38,6 +38,11 @@ import java.awt.GridLayout;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
+import system.Account;
+import system.AccountFactory;
+import system.Admin;
+import system.Customer;
+
 import java.awt.CardLayout;
 
 public class Login extends JFrame {
@@ -48,7 +53,7 @@ public class Login extends JFrame {
 	 * Create the frame.
 	 */
 	public Login() {
-		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\Downloads/icon.jpg"));
+		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\Downloads/bank.png"));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setTitle("Northland Bank");
 		setSize(800, 657);
@@ -96,14 +101,27 @@ public class Login extends JFrame {
         rememberMe.setBackground(Color.WHITE);
         rememberMe.setFont(new Font("Arial", Font.PLAIN, 12));
         rememberMe.setAlignmentX(Component.CENTER_ALIGNMENT);
-
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        
+        
         // Login Button
         JButton loginButton = new JButton("Log In");
         loginButton.setBackground(new Color(0, 102, 204));
         loginButton.setForeground(Color.WHITE);
         loginButton.setFocusPainted(false);
         loginButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         loginButton.setPreferredSize(new Dimension(100, 40));
+        
+        loginButton.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+            	loginButton.setBackground(new Color(30, 80, 180));
+            }
+            public void mouseExited(MouseEvent e) {
+            	loginButton.setBackground(new Color(42, 104, 209));
+            }
+        });
+
 
         // Register Label
         JLabel registerLabel = new JLabel("<html><u>New user? Create an account</u></html>");
@@ -113,6 +131,8 @@ public class Login extends JFrame {
         		Login.this.dispose();
         		RegisterForm registerForm = new RegisterForm();
         		registerForm.setVisible(true);
+        		
+        		
         	}
         });
         registerLabel.setForeground(new Color(0, 102, 204));
@@ -130,6 +150,46 @@ public class Login extends JFrame {
         loginPanel.add(passwordField);
         loginPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         loginPanel.add(rememberMe);
+        
+     // Admin Login Checkbox
+        JCheckBox adminCheckBox = new JCheckBox("Login as Admin");
+        adminCheckBox.setBackground(Color.WHITE);
+        adminCheckBox.setFont(new Font("Arial", Font.PLAIN, 12));
+        adminCheckBox.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginPanel.add(adminCheckBox);
+        
+        loginButton.addActionListener(e -> {
+            String username = usernameField.getText();
+            String password = new String(passwordField.getPassword());
+            
+            if (adminCheckBox.isSelected()) {
+            	Account account = AccountFactory.findAdminAccountByNameAndPassword(username, password);
+                if (account != null) {
+                    JOptionPane.showMessageDialog(Login.this, "Welcome, " + account.getAdmin().getName() + "!");
+                    dispose();
+                    Dashboard dashboard = new Dashboard(account);
+                    dashboard.setVisible(true);
+                    dashboard.setLocationRelativeTo(null);
+                } else {
+                    JOptionPane.showMessageDialog(Login.this, "Invalid admin credentials.");
+                }
+            } else {
+            	 Account account = AccountFactory.findAccountByNameAndPassword(username, password);
+
+                 if (account != null) {
+                     JOptionPane.showMessageDialog(Login.this, "Welcome, " + account.getOwner().getName() + "!");
+                     dispose();
+                     Dashboard dashboard = new Dashboard(account);
+                     dashboard.setVisible(true);
+                     dashboard.setLocationRelativeTo(null);
+                 } else {
+                     JOptionPane.showMessageDialog(Login.this, "Invalid username or password.");
+                 }
+
+            }
+        });
+        
+                    
         loginPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         loginPanel.add(loginButton);
         loginPanel.add(Box.createRigidArea(new Dimension(0, 25)));
@@ -137,8 +197,6 @@ public class Login extends JFrame {
 
         getContentPane().add(loginPanel);
         setVisible(true);
-        
-        
         
 
 	}

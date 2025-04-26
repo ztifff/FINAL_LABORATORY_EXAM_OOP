@@ -1,18 +1,15 @@
 package system;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Admin {
 	private String id;
 	private static int idCount;
 	private String name;
-	private String contactNumber;
+	private String password;
 	
-	public Admin(String name, String contactNumber) {
+	public Admin(String name, String password) {
 		id = String.format("%04d", ++idCount);
 		this.name = name;
-		this. contactNumber = contactNumber;
+		this. password = password;
 	}
 	
 	public String getId() {
@@ -23,8 +20,8 @@ public class Admin {
 		return name;
 	}
 
-	public String getContactNumber() {
-		return contactNumber;
+	public String getPassword() {
+		return password;
 	}
 
 	public void setId(String id) {
@@ -35,8 +32,8 @@ public class Admin {
 		this.name = name;
 	}
 
-	public void setContactNumber(String contactNumber) {
-		this.contactNumber = contactNumber;
+	public void setContactNumber(String password) {
+		this.password = password;
 	}
 
 
