@@ -8,5 +8,10 @@ public class Transaction {
 		this.action = action;
 		this.amount = amount;
 	}
+	
+	@Override
+    public String toString() {
+        return action + ": ₱" + amount;
+    }
 
 }

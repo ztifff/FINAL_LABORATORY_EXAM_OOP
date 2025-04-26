@@ -2,6 +2,13 @@ package gui;
 
 import javax.swing.*;
 import javax.swing.border.*;
+
+import system.Account;
+import system.AccountFactory;
+import system.CheckingAccount;
+import system.Customer;
+import system.SavingsAccount;
+
 import java.awt.*;
 import java.awt.event.*;
 
@@ -122,6 +129,64 @@ public class RegisterForm extends JFrame {
         mainPanel.add(createAccountButton);
         mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         setVisible(true);
+        
+        
+        createAccountButton.addActionListener(e -> {
+            String fullName = fullNameField.getText().trim();
+            String dob = dobField.getText().trim();
+            String phone = phoneField.getText().trim();
+            String email = emailField.getText().trim();
+            String address = addressField.getText().trim();
+            String depositStr = initialDepositField.getText().trim();
+            String password = new String(passwordField.getPassword());
+            String confirmPassword = new String(confirmPasswordField.getPassword());
+
+            // Validation
+            if (fullName.isEmpty() || dob.isEmpty() || phone.isEmpty() || email.isEmpty() || address.isEmpty() ||
+                depositStr.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() ||
+                (!savingsButton.isSelected() && !checkingButton.isSelected())) {
+                
+                JOptionPane.showMessageDialog(this, "Please complete all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!password.equals(confirmPassword)) {
+                JOptionPane.showMessageDialog(this, "Passwords do not match!", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            double deposit;
+            try {
+                deposit = Double.parseDouble(depositStr);
+                if (deposit < 0) throw new NumberFormatException();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid initial deposit.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Create Customer
+            Customer customer = new Customer(fullName, dob, phone, email, address, password);
+
+            // Create Account
+            Account account;
+            if (savingsButton.isSelected()) {
+                account = new SavingsAccount(customer);
+            } else {
+                account = new CheckingAccount(customer);
+            }
+
+            account.deposit(deposit);
+
+            // Store via factory
+            AccountFactory.registerAccount(account);
+
+            JOptionPane.showMessageDialog(this, "Account created successfully!\nYour Account Number: " + account.getAccountNumber());
+            dispose(); // Close the register form
+            Login login = new Login();
+            login.setVisible(true);
+            login.setLocationRelativeTo(null);
+        });
+
     }
 
     private JPanel createFormPanel(String title) {
@@ -166,10 +231,5 @@ public class RegisterForm extends JFrame {
         field.setBackground(new Color(240, 240, 240));
         field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         return field;
-    }
-
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(RegisterForm::new);
     }
 }

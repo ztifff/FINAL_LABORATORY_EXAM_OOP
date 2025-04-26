@@ -6,11 +6,17 @@ public class Account {
     private String accountNumber;
     private double balance;
     private TransactionHistory history;
+    private Customer owner;
 
-    public Account() {
+    public Account(Customer owner) {
         this.accountNumber = UUID.randomUUID().toString().substring(0, 8); // Random 8-char ID
         this.balance = 0.0;
         this.history = new TransactionHistory();
+        this.owner = owner;
+    }
+    
+    public Customer getOwner() {
+        return owner;
     }
 
     public String getAccountNumber() {

@@ -7,13 +7,21 @@ public class Customer {
 	private String id;
 	private static int idCount;
 	private String name;
+	private String dob;
 	private String contactNumber;
+	private String email;
+	private String address;
+	private String password;
 	private List<Account> accounts;
 	
-	public Customer(String name, String contactNumber) {
+	public Customer(String name, String dob, String contactNumber, String email, String address, String password) {
 		id = String.format("%04d", ++idCount);
 		this.name = name;
+		this.dob = dob;
 		this. contactNumber = contactNumber;
+		this.email = email;
+		this.address = address;
+		this.password = password;
 		this.accounts = new ArrayList<>();
 	}
 	
