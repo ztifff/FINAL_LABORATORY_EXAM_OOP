@@ -1,6 +1,9 @@
 package system;
 
 import java.util.UUID;
+
+import javax.swing.JOptionPane;
+
 import java.time.LocalDate;
 
 public class Account {
@@ -73,32 +76,24 @@ public class Account {
     
     public boolean transfer(Account recipient, Customer owner, double amount) {
         if (amount <= 0) {
-            System.out.println("Transfer amount must be positive.");
-            return false;
-        }
-        
-     // Withdraw the amount from the sender account
-        if (!this.withdraw(amount)) {
-            System.out.println("Insufficient balance for transfer.");
+            JOptionPane.showMessageDialog(null, "Transfer amount must be positive.", "Invalid Transfer", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
-        // Deposit the amount into the recipient account
+        if (!this.withdraw(amount)) {
+            JOptionPane.showMessageDialog(null, "Insufficient balance for transfer.", "Transfer Failed", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+
         if (!recipient.deposit(amount)) {
             this.deposit(amount);
-            System.out.println("Transfer failed. Amount refunded.");
+            JOptionPane.showMessageDialog(null, "Transfer failed. Amount refunded to your account.", "Transfer Failed", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
-        // If everything is successful, log the transaction
         history.addTransaction(new Transaction("Transfer to " + recipient.getOwner().getName(), amount, LocalDate.now()));
         recipient.getHistory().addTransaction(new Transaction("Transfer from " + this.getOwner().getName(), amount, LocalDate.now()));
         return true;
     }
 
-    public void printStatement() {
-        System.out.println("Account Number: " + accountNumber);
-        System.out.println("Balance: " + balance);
-        history.printHistory();
-    }
 }
