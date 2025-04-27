@@ -2,13 +2,13 @@ package system;
 
 public class SavingsAccount extends Account {
 
-    public SavingsAccount(Customer owner) {
-        super(owner); 
+    public SavingsAccount(Customer owner, String accountType, Bank bank) {
+        super(owner, accountType, bank); 
     }
 
     @Override
-    public void deposit(double amount) {
-        super.deposit(amount);
+    public boolean deposit(double amount) {
+    	return super.deposit(amount);
         
     }
 

@@ -41,6 +41,7 @@ import javax.swing.border.TitledBorder;
 import system.Account;
 import system.AccountFactory;
 import system.Admin;
+import system.BankLedger;
 import system.Customer;
 
 import java.awt.CardLayout;
@@ -163,7 +164,16 @@ public class Login extends JFrame {
             String password = new String(passwordField.getPassword());
             
             if (adminCheckBox.isSelected()) {
-            	Account account = AccountFactory.findAdminAccountByNameAndPassword(username, password);
+            	 BankLedger bankLedger = BankLedger.getInstance();
+            	 
+            	Account account = null;
+            	for (Account a : bankLedger.getAllAccounts()) {
+                    if (a.getAdmin() != null && a.getAdmin().getName().equals(username) && a.getAdmin().getPassword().equals(password)) {
+                        account = a;
+                        break;
+                    }
+                }
+            	
                 if (account != null) {
                     JOptionPane.showMessageDialog(Login.this, "Welcome, " + account.getAdmin().getName() + "!");
                     dispose();
@@ -174,7 +184,15 @@ public class Login extends JFrame {
                     JOptionPane.showMessageDialog(Login.this, "Invalid admin credentials.");
                 }
             } else {
-            	 Account account = AccountFactory.findAccountByNameAndPassword(username, password);
+            	BankLedger bankLedger = BankLedger.getInstance();
+            	
+            	 Account account = null;
+            	 for (Account a : bankLedger.getAllAccounts()) {
+                     if (a.getOwner() != null && a.getOwner().getName().equals(username) && a.getOwner().getPassword().equals(password)) {
+                         account = a;
+                         break;
+                     }
+                 }
 
                  if (account != null) {
                      JOptionPane.showMessageDialog(Login.this, "Welcome, " + account.getOwner().getName() + "!");

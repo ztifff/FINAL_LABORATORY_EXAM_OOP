@@ -13,6 +13,10 @@ public class TransactionHistory {
     public void addTransaction(Transaction transaction) {
         transactions.add(transaction);
     }
+    
+    public List<Transaction> getHistoryList() {
+        return transactions;
+    }
 
     public void printHistory() {
         System.out.println("Transaction History:");

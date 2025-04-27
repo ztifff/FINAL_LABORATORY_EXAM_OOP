@@ -2,8 +2,8 @@ package system;
 
 public class CheckingAccount extends Account {
 
-    public CheckingAccount(Customer owner) {
-        super(owner);
+    public CheckingAccount(Customer owner, String accountType, Bank bank) {
+        super(owner, accountType, bank);
     }
 
     @Override
@@ -13,7 +13,6 @@ public class CheckingAccount extends Account {
             super.withdraw(amount);
             return true;
         } else {
-            System.out.println("Overdraft limit reached.");
             return false;
         }
     }
