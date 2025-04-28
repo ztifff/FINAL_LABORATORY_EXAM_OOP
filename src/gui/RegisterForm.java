@@ -2,16 +2,11 @@ package gui;
 
 import javax.swing.*;
 import javax.swing.border.*;
-
 import system.Account;
 import system.AccountFactory;
-import system.Bank;
 import system.BankLedger;
-import system.CheckingAccount;
 import system.Customer;
 import system.LoanAccount;
-import system.SavingsAccount;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
@@ -20,54 +15,54 @@ import java.util.Date;
 public class RegisterForm extends JFrame {
 
     public RegisterForm() {
-    	setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\Downloads/bank.png"));
+        setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\Downloads\\bank.png"));
         setTitle("Northland Bank Account Registration Form");
         setSize(550, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
         JPanel mainPanel = new JPanel();
-        mainPanel.setBackground(new Color(249, 249, 249)); // Slightly off-white
+        mainPanel.setBackground(new Color(249, 249, 249));
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         add(mainPanel);
 
-        // Header Panel
-        JPanel headerPanel = new JPanel();
-        headerPanel.setBackground(new Color(230, 250, 230)); // soft green
-        headerPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        // Header
         JLabel headerTitle = new JLabel("Northland Bank Account Registration Form");
         headerTitle.setFont(new Font("Arial", Font.BOLD, 22));
-        headerPanel.add(headerTitle);
-        mainPanel.add(headerPanel);
-
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        headerTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        headerTitle.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        mainPanel.add(headerTitle);
 
         // Personal Information Panel
-        JPanel personalPanel = createFormPanel("Personal Information");
+        JPanel personalPanel = new JPanel();
+        personalPanel.setBackground(Color.WHITE);
+        personalPanel.setBorder(createTitledBorder("Personal Information"));
+        personalPanel.setLayout(new BoxLayout(personalPanel, BoxLayout.Y_AXIS));
+        personalPanel.setMaximumSize(new Dimension(500, 300));
 
         JTextField fullNameField = createTextField();
-        JLabel lblfullName = new JLabel("Full Name:");
         JSpinner dobSpinner = new JSpinner(new SpinnerDateModel());
-        JLabel lbldob = new JLabel("Date of Birth:");
-        dobSpinner.setEditor(new JSpinner.DateEditor(dobSpinner, "yyyy-MM-dd")); 
+        dobSpinner.setEditor(new JSpinner.DateEditor(dobSpinner, "yyyy-MM-dd"));
         JTextField phoneField = createTextField();
-        JLabel lblphone= new JLabel("Phone Number:");
         JTextField emailField = createTextField();
-        JLabel lblemail= new JLabel("Email Address:");
         JTextField addressField = createTextField();
-        JLabel lbladdress= new JLabel("Address:");
-
-        addFormRow(personalPanel, lblfullName, fullNameField);
-        addFormRow(personalPanel, lbldob, dobSpinner);
-        addFormRow(personalPanel, lblphone, phoneField);
-        addFormRow(personalPanel, lblemail, emailField);
-        addFormRow(personalPanel, lbladdress, addressField);
+        
+        personalPanel.add(createFormRowPersonalDetails("Full Name:", fullNameField));
+        personalPanel.add(createFormRowPersonalDetails("Date of Birth:", dobSpinner));
+        personalPanel.add(createFormRowPersonalDetails("Phone Number:", phoneField));
+        personalPanel.add(createFormRowPersonalDetails("Email Address:", emailField));
+        personalPanel.add(createFormRowPersonalDetails("Address:", addressField));
 
         mainPanel.add(personalPanel);
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        mainPanel.add(Box.createVerticalStrut(20)); 
 
         // Account Information Panel
-        JPanel accountPanel = createFormPanel("Account Information");
+        JPanel accountPanel = new JPanel();
+        accountPanel.setBackground(Color.WHITE);
+        accountPanel.setBorder(createTitledBorder("Account Information"));
+        accountPanel.setLayout(new BoxLayout(accountPanel, BoxLayout.Y_AXIS));
+        accountPanel.setMaximumSize(new Dimension(500, 250));
 
         JRadioButton savingsButton = new JRadioButton("Savings");
         JRadioButton checkingButton = new JRadioButton("Checking");
@@ -77,42 +72,40 @@ public class RegisterForm extends JFrame {
         accountTypeGroup.add(checkingButton);
         accountTypeGroup.add(loanButton);
 
-        JPanel accountTypePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel accountTypePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         accountTypePanel.setBackground(Color.WHITE);
         accountTypePanel.add(savingsButton);
         accountTypePanel.add(checkingButton);
         accountTypePanel.add(loanButton);
-        JLabel lblAccountype = new JLabel("Account Type:");
 
+        JLabel lblInitialDeposit = new JLabel("Initial Deposit:");
+        JLabel lblAccontType = new JLabel("Account Type:");
+        JLabel lblPassword = new JLabel("Password:");
+        JLabel lblConfirmPassword = new JLabel("Confirm Password:");
         JTextField initialDepositField = createTextField();
-        JLabel lblinitialDeposit = new JLabel("Initial Deposit:");
-
-        addFormRow(accountPanel, lblAccountype, accountTypePanel);
-        addFormRow(accountPanel, lblinitialDeposit, initialDepositField);
-
-        mainPanel.add(accountPanel);
-        
-        
         JPasswordField passwordField = createPasswordField();
         JPasswordField confirmPasswordField = createPasswordField();
-        JLabel lblPasswordField = new JLabel("Password:");
-        JLabel lblConfirmPasswordField = new JLabel("Confirm Password:");
 
-        addFormRow(accountPanel, lblPasswordField, passwordField);
-        addFormRow(accountPanel, lblConfirmPasswordField, confirmPasswordField);
+        accountPanel.add(createFormRowAccountTypeLabel(lblAccontType, accountTypePanel));
+        accountPanel.add(createFormRowAccountTypeLabel(lblInitialDeposit, initialDepositField));
+        accountPanel.add(createFormRowAccountTypeLabel(lblPassword, passwordField));
+        accountPanel.add(createFormRowAccountTypeLabel(lblConfirmPassword, confirmPasswordField));
 
+        mainPanel.add(accountPanel);
 
-        // Create Account Button
+        mainPanel.add(Box.createVerticalStrut(20)); // space
+
+        // Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        buttonPanel.setBackground(new Color(249, 249, 249));
+
         JButton createAccountButton = new JButton("Create Account");
-        createAccountButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         createAccountButton.setBackground(new Color(42, 104, 209));
         createAccountButton.setForeground(Color.WHITE);
         createAccountButton.setFocusPainted(false);
         createAccountButton.setFont(new Font("Arial", Font.BOLD, 16));
         createAccountButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        
-        // Hover effect
         createAccountButton.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) {
                 createAccountButton.setBackground(new Color(30, 80, 180));
@@ -121,38 +114,34 @@ public class RegisterForm extends JFrame {
                 createAccountButton.setBackground(new Color(42, 104, 209));
             }
         });
-        
-     // Back to Login Button
+
         JButton backButton = new JButton("Back to Login");
-        backButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         backButton.setBackground(Color.WHITE);
         backButton.setForeground(new Color(42, 104, 209));
         backButton.setFocusPainted(false);
         backButton.setFont(new Font("Arial", Font.PLAIN, 14));
-        backButton.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        backButton.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Add action listener
+        buttonPanel.add(backButton);
+        buttonPanel.add(createAccountButton);
+
+        mainPanel.add(buttonPanel);
+
+        setVisible(true);
+
+        // --- Button Actions ---
         backButton.addActionListener(e -> {
-            dispose(); // close this frame
+            dispose();
             Login login = new Login();
             login.setVisible(true);
             login.setLocationRelativeTo(null);
         });
 
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 10))); // small space
-        mainPanel.add(backButton);
-
-
-        mainPanel.add(createAccountButton);
-        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        setVisible(true);
-        
-        
         createAccountButton.addActionListener(e -> {
             String fullName = fullNameField.getText().trim();
             Date dobDate = (Date) dobSpinner.getValue();
-            String dob = new SimpleDateFormat("yyyy-MM-dd").format(dobDate); 
+            String dob = new SimpleDateFormat("yyyy-MM-dd").format(dobDate);
             String phone = phoneField.getText().trim();
             String email = emailField.getText().trim();
             String address = addressField.getText().trim();
@@ -162,13 +151,13 @@ public class RegisterForm extends JFrame {
 
             // Validation
             if (fullName.isEmpty() || dob.isEmpty() || phone.isEmpty() || email.isEmpty() || address.isEmpty() ||
-                depositStr.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() ||
-                (!savingsButton.isSelected() && !checkingButton.isSelected() && !loanButton.isSelected())) {
-                
+                    depositStr.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() ||
+                    (!savingsButton.isSelected() && !checkingButton.isSelected() && !loanButton.isSelected())) {
+
                 JOptionPane.showMessageDialog(this, "Please complete all fields.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            
+
             if (!phone.matches("\\d{10,11}")) {
                 JOptionPane.showMessageDialog(this, "Please enter a valid phone number (10-11 digits).", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -195,7 +184,7 @@ public class RegisterForm extends JFrame {
 
             // Create Customer
             Customer customer = new Customer(fullName, dob, phone, email, address, password);
-            
+
             String accountType = "";
             if (savingsButton.isSelected()) {
                 accountType = "Savings";
@@ -203,13 +192,8 @@ public class RegisterForm extends JFrame {
                 accountType = "Checking";
             } else if (loanButton.isSelected()) {
                 accountType = "Loan";
-            } else {
-                JOptionPane.showMessageDialog(this, "Please select an account type.", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
             }
-            
-            // Create Account
-         // Use AccountFactory to create the account
+
             Account account = AccountFactory.createAccount(accountType, customer);
 
             if (loanButton.isSelected()) {
@@ -217,59 +201,38 @@ public class RegisterForm extends JFrame {
             } else {
                 account.deposit(deposit);
             }
-            
-            BankLedger bankLedger = BankLedger.getInstance();
-            bankLedger.addAccount(account);
+
+            BankLedger.getInstance().addAccount(account);
 
             JOptionPane.showMessageDialog(this, "Account created successfully!\nYour Account Number: " + account.getAccountNumber());
-            dispose(); 
+            dispose();
             Login login = new Login();
             login.setVisible(true);
             login.setLocationRelativeTo(null);
         });
-        
-        savingsButton.addActionListener(e -> lblinitialDeposit.setText("Initial Deposit:"));
-        checkingButton.addActionListener(e -> lblinitialDeposit.setText("Initial Deposit:"));
-        loanButton.addActionListener(e -> lblinitialDeposit.setText("Borrow Amount:"));
 
-
+        savingsButton.addActionListener(e -> lblInitialDeposit.setText("Initial Deposit:"));
+        checkingButton.addActionListener(e -> lblInitialDeposit.setText("Initial Deposit:"));
+        loanButton.addActionListener(e -> lblInitialDeposit.setText("Borrow Amount:"));
     }
 
-    private JPanel createFormPanel(String title) {
-        JPanel panel = new JPanel();
+    private JPanel createFormRowPersonalDetails(String labelText, JComponent field) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         panel.setBackground(Color.WHITE);
-        panel.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-                title,
-                TitledBorder.LEFT,
-                TitledBorder.TOP,
-                new Font("Arial", Font.BOLD, 16),
-                new Color(85, 170, 85)
-        ));
-        panel.setLayout(new GridBagLayout());
+        JLabel label = new JLabel(labelText);
+        label.setPreferredSize(new Dimension(130, 25));
+        panel.add(label);
+        panel.add(field);
         return panel;
     }
     
-    private JPasswordField createPasswordField() {
-        JPasswordField field = new JPasswordField(20);
-        field.setBackground(new Color(240, 240, 240));
-        field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        return field;
-    }
-
-
-    private void addFormRow(JPanel panel, Component labelText, Component field) {
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        gbc.gridx = 0;
-        gbc.gridy = panel.getComponentCount() / 2;
-        panel.add(labelText, gbc);
-
-        gbc.gridx = 1;
-        panel.add(field, gbc);
+    private JPanel createFormRowAccountTypeLabel(JLabel label, JComponent field) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panel.setBackground(Color.WHITE);
+        label.setPreferredSize(new Dimension(130, 25));
+        panel.add(label);
+        panel.add(field);
+        return panel;
     }
 
     private JTextField createTextField() {
@@ -277,5 +240,23 @@ public class RegisterForm extends JFrame {
         field.setBackground(new Color(240, 240, 240));
         field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         return field;
+    }
+
+    private JPasswordField createPasswordField() {
+        JPasswordField field = new JPasswordField(20);
+        field.setBackground(new Color(240, 240, 240));
+        field.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        return field;
+    }
+
+    private TitledBorder createTitledBorder(String title) {
+        return BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                title,
+                TitledBorder.LEFT,
+                TitledBorder.TOP,
+                new Font("Arial", Font.BOLD, 16),
+                new Color(85, 170, 85)
+        );
     }
 }

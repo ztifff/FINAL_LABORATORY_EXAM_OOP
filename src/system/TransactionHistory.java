@@ -17,12 +17,7 @@ public class TransactionHistory {
     public List<Transaction> getHistoryList() {
         return transactions;
     }
+    
 
-    public void printHistory() {
-        System.out.println("Transaction History:");
-        for (Transaction t : transactions) {
-            System.out.println(t);
-        }
-    }
 
 }

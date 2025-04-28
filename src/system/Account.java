@@ -60,6 +60,7 @@ public class Account {
         if (amount > 0) {
             balance += amount;
             history.addTransaction(new Transaction("Deposit", amount, LocalDate.now()));
+            
             return true;
         }
         return false;

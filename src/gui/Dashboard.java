@@ -7,11 +7,16 @@ import system.Bank;
 import system.BankLedger;
 import system.CheckingAccount;
 import system.LoanAccount;
+import system.LowBalanceNotifier;
+import system.Transaction;
 
 import javax.swing.DefaultListModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
+import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableModel;
 
 public class Dashboard extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -53,7 +58,7 @@ public class Dashboard extends JFrame {
 		// NAVIGATION BUTTONS
 		JButton btnDashboard = createNavButton("📊 Dashboard");
 		JButton btnTransaction = createNavButton("💸 Transaction");
-		JButton btnReport = createNavButton("📄 Report");
+		JButton btnReport = createNavButton("📄 Transaction History");
 		JButton btnAccount = createNavButton("👤 Account");
 		JButton btnLogout = createNavButton("🚪 Logout");
 
@@ -129,16 +134,16 @@ public class Dashboard extends JFrame {
 
 		JPanel switchpanel = new JPanel();
 		getContentPane().add(switchpanel, BorderLayout.CENTER);
-		switchpanel.setLayout(new BorderLayout(0, 0));
+		switchpanel.setLayout(new CardLayout(0, 0));
 
 		JPanel dashboardpanel1 = new JPanel();
 		dashboardpanel1.setBackground(new Color(192, 192, 192));
-		switchpanel.add(dashboardpanel1);
+		switchpanel.add(dashboardpanel1, "Dashboard");
 		dashboardpanel1.setLayout(new CardLayout(0, 0));
 
 		JPanel dashboardpanel2 = new JPanel();
 		dashboardpanel2.setBackground(new Color(240, 240, 240)); // Softer light gray
-		dashboardpanel1.add(dashboardpanel2, "name_525434880627800");
+		dashboardpanel1.add(dashboardpanel2, "Dashboard");
 		dashboardpanel2.setLayout(new BorderLayout(20, 20)); // Added gaps
 
 		// --- HEADER ---
@@ -257,7 +262,7 @@ public class Dashboard extends JFrame {
 
 		// TRANSACTION PANEL SETUP
 		JPanel transactionPanel = new JPanel();
-		switchpanel.add(transactionPanel, BorderLayout.NORTH);
+		switchpanel.add(transactionPanel, "name_695650254038700");
 		transactionPanel.setLayout(new CardLayout(0, 0));
 		transactionPanel.setVisible(false);
 		transactionPanel.setBackground(new Color(245, 245, 245)); 
@@ -266,7 +271,7 @@ public class Dashboard extends JFrame {
 		JPanel transactionPanel1 = new JPanel();
 		transactionPanel.add(transactionPanel1, "TransactionMain");
 		transactionPanel1.setLayout(new BorderLayout(20, 20));
-		transactionPanel1.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+		transactionPanel1.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));//s
 
 		// Title
 		JLabel transactionTitle = new JLabel("💸 Transaction");
@@ -295,16 +300,19 @@ public class Dashboard extends JFrame {
 
 		// Labels and fields styling
 		JLabel lblAccountNumber = new JLabel("Account Number:");
+		lblAccountNumber.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtAccountNumber = new JTextField(account.getAccountNumber());
 		txtAccountNumber.setEditable(false);
 		txtAccountNumber.setBackground(new Color(240, 240, 240));
 
 		JLabel lblAccountHolder = new JLabel("Account Holder Name:");
+		lblAccountHolder.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtAccountHolder = new JTextField(account.getOwner().getName());
 		txtAccountHolder.setEditable(false);
 		txtAccountHolder.setBackground(new Color(240, 240, 240));
 
 		JLabel lblAccountType = new JLabel("Account Type:");
+		lblAccountType.setHorizontalAlignment(SwingConstants.CENTER);
 		JLabel lblAccountTypeValue = new JLabel(account.getAccountType());
 		lblAccountTypeValue.setForeground(new Color(33, 37, 41)); 
 		
@@ -347,19 +355,23 @@ public class Dashboard extends JFrame {
 
 		// Labels and fields styling
 		JLabel lblAmount = new JLabel("Amount:");
+		lblAmount.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtAmount = new JTextField();
 
 		JLabel lblDate = new JLabel("Date:");
+		lblDate.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtDate = new JTextField();
 		txtDate.setEditable(false);
 		txtDate.setText(java.time.LocalDate.now().toString());
 		txtDate.setBackground(new Color(240, 240, 240));
 
 		JLabel lblRecipientAccount = new JLabel("Recipient Account Number:");
+		lblRecipientAccount.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtRecipientAccount = new JTextField();
 		txtRecipientAccount.setEnabled(false);
 
 		JLabel lblRecipientName = new JLabel("Recipient Account Holder Name:");
+		lblRecipientName.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtRecipientName = new JTextField();
 		txtRecipientName.setEnabled(false);
 
@@ -511,7 +523,7 @@ public class Dashboard extends JFrame {
 
 			if (transactionSuccess) {
 				lblbalance1.setText("Balance: ₱" + String.format("%.2f", account.getBalance()));
-
+				LowBalanceNotifier.checkAndNotify(account);
 				if (account instanceof LoanAccount) {
 					lblLoanBalanceAmount.setText(String.format("₱%,.2f", ((LoanAccount) account).getLoanBalance()));
 				} else {
@@ -557,14 +569,149 @@ public class Dashboard extends JFrame {
 			}
 
 		});
+		
+		
+		JPanel transactionHistory = new JPanel();
+		switchpanel.add(transactionHistory, "name_695650282872100");
+		transactionHistory.setLayout(new CardLayout(0, 0));
+		transactionHistory.setVisible(false);
+		
+		JPanel transactionHistoryPanel = new JPanel(new BorderLayout(20, 20));
+		transactionHistoryPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+		transactionHistory.add(transactionHistoryPanel);
+
+		// Title
+		JLabel historyTitle = new JLabel("📜 Transaction History");
+		historyTitle.setFont(new Font("Roboto", Font.BOLD, 30));
+		historyTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		transactionHistoryPanel.add(historyTitle, BorderLayout.NORTH);
+
+		// Table Setup
+		String[] columnNames = { "Date", "Type", "Amount", "Recipient" };
+		DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
+		
+		JTable transactionTable = new JTable(tableModel);
+
+		// Scrollable Table
+		JScrollPane scrollPane = new JScrollPane(transactionTable);
+		transactionHistoryPanel.add(scrollPane, BorderLayout.CENTER);
+
+		// Only Refresh Button Panel
+		JPanel buttonPanel1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10)); // LEFT aligned
+		JButton btnRefresh = new JButton("🔄 Refresh");
+		buttonPanel1.add(btnRefresh);
+
+		// Add only the refresh button panel to SOUTH
+		transactionHistoryPanel.add(buttonPanel1, BorderLayout.SOUTH);
+		
+		btnRefresh.addActionListener(e -> {
+		    updateTransactionTable(tableModel, account); // Refresh the table when the user clicks "Refresh"
+		});
 
 
 
+		
+		// ACCOUNT INFORMATION PANEL SETUP
+		JPanel accountInformationPanel = new JPanel();
+		switchpanel.add(accountInformationPanel, "name_695650313995900");
+		accountInformationPanel.setLayout(new CardLayout(0, 0));
+		accountInformationPanel.setVisible(false);
+		accountInformationPanel.setBackground(new Color(245, 245, 245)); // Light gray background
+
+		// Main panel inside account information
+		JPanel accountInformationPanel1 = new JPanel();
+		accountInformationPanel.add(accountInformationPanel1, "AccountInfo");
+		accountInformationPanel1.setLayout(new BorderLayout(20, 20));
+		accountInformationPanel1.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Padding
+
+		// Title
+		JLabel lblAccountInformationTitle = new JLabel("👤 Account Information");
+		lblAccountInformationTitle.setFont(new Font("Roboto", Font.BOLD, 30));
+		lblAccountInformationTitle.setForeground(new Color(33, 37, 41));
+		lblAccountInformationTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		accountInformationPanel1.add(lblAccountInformationTitle, BorderLayout.NORTH);
+
+		// Main content panel
+		JPanel accountContentPanel = new JPanel();
+		accountContentPanel.setLayout(new GridLayout(4, 1, 20, 20));
+		accountContentPanel.setBackground(new Color(245, 245, 245));
+
+		// Wrap accountContentPanel in a ScrollPane
+		JScrollPane accountScrollPane = new JScrollPane(accountContentPanel);
+		accountScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		accountScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		accountInformationPanel1.add(accountScrollPane, BorderLayout.CENTER);
+
+		// ========== ACCOUNT HOLDER NAME ==========
+		JPanel accountHolderPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+		accountHolderPanel.setBorder(BorderFactory.createTitledBorder("Account Holder Name"));
+		accountHolderPanel.setBackground(new Color(255, 255, 255));
+		accountHolderPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+
+		JLabel lblUsernameAccount = new JLabel("Name:");
+		lblUsernameAccount.setHorizontalAlignment(SwingConstants.CENTER);
+		JLabel lblUsernameInfo = new JLabel(account.getOwner().getName());
+		lblUsernameInfo.setHorizontalAlignment(SwingConstants.CENTER);
+
+		accountHolderPanel.add(lblUsernameAccount);
+		accountHolderPanel.add(lblUsernameInfo);
+		accountContentPanel.add(accountHolderPanel);
+
+		// ========== ACCOUNT NUMBER ==========
+		JPanel accountNumberPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+		accountNumberPanel.setBorder(BorderFactory.createTitledBorder("Account Number"));
+		accountNumberPanel.setBackground(new Color(255, 255, 255));
+		accountNumberPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+
+		JLabel lblAccountNumberInfo = new JLabel("Number:");
+		lblAccountNumberInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		JLabel lblAccountNumberView = new JLabel(account.getAccountNumber());
+		lblAccountNumberView.setHorizontalAlignment(SwingConstants.CENTER);
+
+		accountNumberPanel.add(lblAccountNumberInfo);
+		accountNumberPanel.add(lblAccountNumberView);
+		accountContentPanel.add(accountNumberPanel);
+
+		// ========== ACCOUNT TYPE ==========
+		JPanel accountTypePanel = new JPanel(new GridLayout(1, 2, 10, 10));
+		accountTypePanel.setBorder(BorderFactory.createTitledBorder("Account Type"));
+		accountTypePanel.setBackground(new Color(255, 255, 255));
+		accountTypePanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+
+		JLabel lblAccountTypeInfo = new JLabel("Type:");
+		lblAccountTypeInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		JLabel lblAccountTypeView = new JLabel(account.getAccountType());
+		lblAccountTypeView.setHorizontalAlignment(SwingConstants.CENTER);
+
+		accountTypePanel.add(lblAccountTypeInfo);
+		accountTypePanel.add(lblAccountTypeView);
+		accountContentPanel.add(accountTypePanel);
+
+		// ========== ACCOUNT BALANCE ==========
+		JPanel accountBalancePanel = new JPanel(new GridLayout(1, 2, 10, 10));
+		accountBalancePanel.setBorder(BorderFactory.createTitledBorder("Account Balance"));
+		accountBalancePanel.setBackground(new Color(255, 255, 255));
+		accountBalancePanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+
+		JLabel lblAccountBalanceInfo = new JLabel("Balance:");
+		lblAccountBalanceInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		JLabel lblAccountBalanceView = new JLabel(String.format("₱%,.2f", account.getBalance()));
+		lblAccountBalanceView.setHorizontalAlignment(SwingConstants.CENTER);
+
+		accountBalancePanel.add(lblAccountBalanceInfo);
+		accountBalancePanel.add(lblAccountBalanceView);
+		accountContentPanel.add(accountBalancePanel);
+
+
+
+		//Switching panel
 		btnTransaction.addMouseListener(new MouseAdapter() {
 
 			public void mouseClicked(MouseEvent e) {
 				dashboardpanel1.setVisible(false);
 				transactionPanel.setVisible(true);
+				transactionHistory.setVisible(false);
+				accountInformationPanel.setVisible(false);
 			}
 		});
 
@@ -573,9 +720,57 @@ public class Dashboard extends JFrame {
 			public void mouseClicked(MouseEvent e) {
 				dashboardpanel1.setVisible(true);
 				transactionPanel.setVisible(false);
+				transactionHistory.setVisible(false);
+				accountInformationPanel.setVisible(false);
+				
 			}
 		});
+		
+		btnReport.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				dashboardpanel1.setVisible(false);
+				transactionPanel.setVisible(false);
+				transactionHistory.setVisible(true);
+				accountInformationPanel.setVisible(false);
+			}
+		});
+		
+		btnAccount.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				dashboardpanel1.setVisible(false);
+				transactionPanel.setVisible(false);
+				transactionHistory.setVisible(false);
+				accountInformationPanel.setVisible(true);
+			}
+		});
+		
+		
+		
+		
+	}
+	
+	public void updateTransactionTable(DefaultTableModel tableModel, Account account) {
+	    java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
+	    tableModel.setRowCount(0); // Clear existing rows
 
+	    for (Transaction transaction : transactions) {
+	        String date = transaction.getDate().toString();
+	        String type = transaction.getAction();
+	        String amount = String.format("₱%.2f", transaction.getAmount());
+	        String recipient = account.getOwner().getName(); // Default recipient
+
+	        // Handle transfers
+	        if (type.startsWith("Transfer to ")) {
+	            recipient = type.substring(12); // Extract recipient from action text
+	            type = "Transfer Sent";
+	        } else if (type.startsWith("Transfer from ")) {
+	            recipient = type.substring(14); // Extract recipient from action text
+	            type = "Transfer Received";
+	        }
+
+	        // Add row to table
+	        tableModel.addRow(new Object[]{date, type, amount, recipient});
+	    }
 	}
 
 	private void updateRecentTransactions() {
