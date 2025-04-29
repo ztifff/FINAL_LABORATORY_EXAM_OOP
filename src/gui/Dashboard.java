@@ -56,11 +56,60 @@ public class Dashboard extends JFrame {
 
 
 		// NAVIGATION BUTTONS
-		JButton btnDashboard = createNavButton("📊 Dashboard");
-		JButton btnTransaction = createNavButton("💸 Transaction");
-		JButton btnReport = createNavButton("📄 Transaction History");
-		JButton btnAccount = createNavButton("👤 Account");
-		JButton btnLogout = createNavButton("🚪 Logout");
+		JButton btnDashboard = new JButton("📊 Dashboard");
+		btnDashboard.setHorizontalAlignment(SwingConstants.LEFT);
+		btnDashboard.setBackground(navBgColor);
+		btnDashboard.setFont(new Font("SansSerif", Font.BOLD, 15));
+		btnDashboard.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		btnDashboard.setFocusPainted(false);
+		btnDashboard.setBorderPainted(false);
+		btnDashboard.setContentAreaFilled(true);
+		btnDashboard.setOpaque(true);
+		btnDashboard.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
+		
+		JButton btnTransaction = new JButton("💸 Transaction");
+		btnTransaction.setHorizontalAlignment(SwingConstants.LEFT);
+		btnTransaction.setBackground(navBgColor);
+		btnTransaction.setFont(new Font("SansSerif", Font.BOLD, 15));
+		btnTransaction.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		btnTransaction.setFocusPainted(false);
+		btnTransaction.setBorderPainted(false);
+		btnTransaction.setContentAreaFilled(true);
+		btnTransaction.setOpaque(true);
+		btnTransaction.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
+		
+		JButton btnReport = new JButton("📄 Transaction History");
+		btnReport.setHorizontalAlignment(SwingConstants.LEFT);
+		btnReport.setBackground(navBgColor);
+		btnReport.setFont(new Font("SansSerif", Font.BOLD, 15));
+		btnReport.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		btnReport.setFocusPainted(false);
+		btnReport.setBorderPainted(false);
+		btnReport.setContentAreaFilled(true);
+		btnReport.setOpaque(true);
+		btnReport.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
+		
+		JButton btnAccount = new JButton("👤 Account");
+		btnAccount.setHorizontalAlignment(SwingConstants.LEFT);
+		btnAccount.setBackground(navBgColor);
+		btnAccount.setFont(new Font("SansSerif", Font.BOLD, 15));
+		btnAccount.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		btnAccount.setFocusPainted(false);
+		btnAccount.setBorderPainted(false);
+		btnAccount.setContentAreaFilled(true);
+		btnAccount.setOpaque(true);
+		btnAccount.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
+		
+		JButton btnLogout = new JButton("🚪 Logout");
+		btnLogout.setHorizontalAlignment(SwingConstants.LEFT);
+		btnLogout.setBackground(navBgColor);
+		btnLogout.setFont(new Font("SansSerif", Font.BOLD, 15));
+		btnLogout.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		btnLogout.setFocusPainted(false);
+		btnLogout.setBorderPainted(false);
+		btnLogout.setContentAreaFilled(true);
+		btnLogout.setOpaque(true);
+		btnLogout.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
 
 		// PANEL to contain buttons
 		JPanel buttonPanel = new JPanel();
@@ -793,19 +842,7 @@ public class Dashboard extends JFrame {
 	}
 
 	
-	private JButton createNavButton(String text) {
-		JButton button = new JButton(text);
-		button.setHorizontalAlignment(SwingConstants.LEFT);
-		button.setBackground(navBgColor);
-		button.setFont(new Font("SansSerif", Font.BOLD, 15));
-		button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		button.setFocusPainted(false);
-		button.setBorderPainted(false);
-		button.setContentAreaFilled(true);
-		button.setOpaque(true);
-		button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 10)); 
-		return button;
-	}
+	
 
 
 }

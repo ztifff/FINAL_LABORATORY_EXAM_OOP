@@ -23,6 +23,7 @@ import javax.swing.JCheckBox;
 import javax.swing.JTextField;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -96,14 +97,6 @@ public class Login extends JFrame {
         passwordField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
         passwordField.setBorder(passBorder);
 
-
-        // Remember Me Checkbox
-        JCheckBox rememberMe = new JCheckBox("Remember me");
-        rememberMe.setBackground(Color.WHITE);
-        rememberMe.setFont(new Font("Arial", Font.PLAIN, 12));
-        rememberMe.setAlignmentX(Component.CENTER_ALIGNMENT);
-        loginPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        
         
         // Login Button
         JButton loginButton = new JButton("Log In");
@@ -150,7 +143,6 @@ public class Login extends JFrame {
         loginPanel.add(Box.createRigidArea(new Dimension(0, 15)));
         loginPanel.add(passwordField);
         loginPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        loginPanel.add(rememberMe);
         
      // Admin Login Checkbox
         JCheckBox adminCheckBox = new JCheckBox("Login as Admin");
@@ -185,24 +177,64 @@ public class Login extends JFrame {
                 }
             } else {
             	BankLedger bankLedger = BankLedger.getInstance();
-            	
-            	 Account account = null;
-            	 for (Account a : bankLedger.getAllAccounts()) {
-                     if (a.getOwner() != null && a.getOwner().getName().equals(username) && a.getOwner().getPassword().equals(password)) {
-                         account = a;
-                         break;
-                     }
-                 }
+                Account matchedCustomer = null;
 
-                 if (account != null) {
-                     JOptionPane.showMessageDialog(Login.this, "Welcome, " + account.getOwner().getName() + "!");
-                     dispose();
-                     Dashboard dashboard = new Dashboard(account);
-                     dashboard.setVisible(true);
-                     dashboard.setLocationRelativeTo(null);
-                 } else {
-                     JOptionPane.showMessageDialog(Login.this, "Invalid username or password.");
-                 }
+                for (Account a : bankLedger.getAllAccounts()) {
+                    if (a.getOwner() != null &&
+                        a.getOwner().getName().equals(username) &&
+                        a.getOwner().getPassword().equals(password)) {
+                        matchedCustomer = a;
+                        break;
+                    }
+                }
+
+                if (matchedCustomer != null) {
+                	List<Account> customerAccounts = matchedCustomer.getOwner().getAccount();
+
+                    if (customerAccounts.size() == 1) {
+                        JOptionPane.showMessageDialog(Login.this, "Welcome, " + matchedCustomer.getOwner().getName() + "!");
+                        dispose();
+                        Dashboard dashboard = new Dashboard(customerAccounts.get(0));
+                        dashboard.setVisible(true);
+                        dashboard.setLocationRelativeTo(null);
+                    }else if (customerAccounts.size() > 1) {
+                        // Multiple accounts — ask the user which one to use
+                        String[] options = customerAccounts.stream()
+                            .map(acc -> acc.getAccountType() + " – " + acc.getAccountNumber())
+                            .toArray(String[]::new);
+                        
+                        if (options.length == 0) {
+                            JOptionPane.showMessageDialog(Login.this, "No account options found.");
+                            return;
+                        }
+
+                        String selected = (String) JOptionPane.showInputDialog(
+                            null,
+                            "Select the account to use:",
+                            "Choose Account",
+                            JOptionPane.QUESTION_MESSAGE,
+                            null,
+                            options,
+                            options[0]
+                        );
+
+                        if (selected != null) {
+                            for (Account acc : customerAccounts) {
+                                String label = acc.getAccountType() + " – " + acc.getAccountNumber();
+                                if (label.equals(selected)) {
+                                    JOptionPane.showMessageDialog(Login.this, "Welcome, " + matchedCustomer.getOwner().getName() + "!");
+                                    dispose();
+                                    Dashboard dashboard = new Dashboard(acc);
+                                    dashboard.setVisible(true);
+                                    dashboard.setLocationRelativeTo(null);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(Login.this, "Invalid username or password.");
+                }
 
             }
         });

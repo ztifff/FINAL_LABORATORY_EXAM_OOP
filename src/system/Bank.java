@@ -36,6 +36,15 @@ public class Bank {
         }
         return null; 
     }
+    
+    public Customer findCustomerByEmail(String email) {
+    	for (Account account : accounts) {
+            if (account.getOwner().getEmail().equals(email)) {
+                return account.getOwner();
+            }
+        }
+        return null; 
+	}
 
     public boolean deposit(Account account, double amount) {
         return account.deposit(amount);

@@ -18,6 +18,16 @@ public class Main {
 		account.deposit(2000);
 		BankLedger bankLedger = BankLedger.getInstance();
         bankLedger.addAccount(account);
+        testCustomer.addAccount(account);  // <== THIS connects the customer to the account
+
+
+        
+        Customer testCustomer1 = new Customer("wat", "2025/12/12", "09443434332", "sad@.com", "street", "yat");
+		account = AccountFactory.createAccount("Checking", testCustomer1);
+		account.deposit(2000);
+		bankLedger = BankLedger.getInstance();
+        bankLedger.addAccount(account);
+        
 	}
 
 }

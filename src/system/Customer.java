@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Customer {
-	private String id;
-	private static int idCount;
 	private String name;
 	private String dob;
 	private String contactNumber;
@@ -15,7 +13,7 @@ public class Customer {
 	private List<Account> accounts;
 	
 	public Customer(String name, String dob, String contactNumber, String email, String address, String password) {
-		id = String.format("%04d", ++idCount);
+		
 		this.name = name;
 		this.dob = dob;
 		this. contactNumber = contactNumber;
@@ -25,9 +23,9 @@ public class Customer {
 		this.accounts = new ArrayList<>();
 	}
 	
-	public String getId() {
-		return id;
-	}
+	public void addAccount(Account account) {
+        accounts.add(account);
+    }
 
 	public String getName() {
 		return name;
@@ -49,9 +47,6 @@ public class Customer {
 		return password;
 	}
 
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public void setName(String name) {
 		this.name = name;

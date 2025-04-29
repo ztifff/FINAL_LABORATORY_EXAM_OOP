@@ -16,7 +16,7 @@ public class Account {
     private Bank bank;
 
     public Account(Customer owner, String accountType, Bank bank) {
-        this.accountNumber = UUID.randomUUID().toString().substring(0, 8); // Random 8-char ID
+        this.accountNumber = UUID.randomUUID().toString().substring(0, 8); 
         this.balance = 0.0;
         this.history = new TransactionHistory();
         this.owner = owner;
@@ -81,16 +81,13 @@ public class Account {
             return false;
         }
 
-        if (!this.withdraw(amount)) {
+        if (balance < amount) {
             JOptionPane.showMessageDialog(null, "Insufficient balance for transfer.", "Transfer Failed", JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
-        if (!recipient.deposit(amount)) {
-            this.deposit(amount);
-            JOptionPane.showMessageDialog(null, "Transfer failed. Amount refunded to your account.", "Transfer Failed", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
+        this.balance -= amount;
+        recipient.balance += amount;
 
         history.addTransaction(new Transaction("Transfer to " + recipient.getOwner().getName(), amount, LocalDate.now()));
         recipient.getHistory().addTransaction(new Transaction("Transfer from " + this.getOwner().getName(), amount, LocalDate.now()));
