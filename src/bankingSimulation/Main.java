@@ -3,6 +3,7 @@ package bankingSimulation;
 import gui.Login;
 import system.Account;
 import system.AccountFactory;
+import system.Admin;
 import system.BankLedger;
 import system.Customer;
 
@@ -18,9 +19,7 @@ public class Main {
 		account.deposit(2000);
 		BankLedger bankLedger = BankLedger.getInstance();
         bankLedger.addAccount(account);
-        testCustomer.addAccount(account);  // <== THIS connects the customer to the account
-
-
+        testCustomer.addAccount(account);  
         
         Customer testCustomer1 = new Customer("wat", "2025/12/12", "09443434332", "sad@.com", "street", "yat");
 		account = AccountFactory.createAccount("Checking", testCustomer1);

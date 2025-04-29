@@ -42,6 +42,7 @@ import javax.swing.border.TitledBorder;
 import system.Account;
 import system.AccountFactory;
 import system.Admin;
+import system.AdminManager;
 import system.BankLedger;
 import system.Customer;
 
@@ -156,23 +157,15 @@ public class Login extends JFrame {
             String password = new String(passwordField.getPassword());
             
             if (adminCheckBox.isSelected()) {
-            	 BankLedger bankLedger = BankLedger.getInstance();
-            	 
-            	Account account = null;
-            	for (Account a : bankLedger.getAllAccounts()) {
-                    if (a.getAdmin() != null && a.getAdmin().getName().equals(username) && a.getAdmin().getPassword().equals(password)) {
-                        account = a;
-                        break;
-                    }
-                }
-            	
-                if (account != null) {
-                    JOptionPane.showMessageDialog(Login.this, "Welcome, " + account.getAdmin().getName() + "!");
-                    dispose();
-                    Dashboard dashboard = new Dashboard(account);
-                    dashboard.setVisible(true);
-                    dashboard.setLocationRelativeTo(null);
-                } else {
+            	Admin admin = AdminManager.getInstance().validate(username, password);
+            	if (admin != null) {
+            	    JOptionPane.showMessageDialog(this, "Welcome Admin!");
+            	    dispose();
+            	    ControlPanel controlPanel = new ControlPanel(admin); // your own admin UI
+            	    controlPanel.setVisible(true);
+            	    controlPanel.setLocationRelativeTo(null);
+            	    return;
+            	} else {
                     JOptionPane.showMessageDialog(Login.this, "Invalid admin credentials.");
                 }
             } else {
