@@ -71,7 +71,7 @@ public class Login extends JFrame {
         loginPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40)); // Padding inside
 
         // Bank Icon
-        JLabel bankIcon = new JLabel(new ImageIcon("C:\\Users\\justf\\Downloads/bankicon.jpg")); // Replace with your real path
+        JLabel bankIcon = new JLabel(new ImageIcon("C:\\Users\\justf\\Downloads/bankicon.jpg")); 
         bankIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Title

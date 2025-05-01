@@ -10,13 +10,14 @@ import system.LoanAccount;
 import system.LowBalanceNotifier;
 import system.Transaction;
 
-import javax.swing.DefaultListModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Date;
 
-import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
 public class Dashboard extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -30,6 +31,9 @@ public class Dashboard extends JFrame {
 	private JButton activeButton;
 	private JButton[] buttons;
 	private DefaultListModel<String> recentTransactionListModel;
+	private JPanel notificationContentPanel;
+
+
 
 	public Dashboard(Account account) {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\Downloads/bank.png"));
@@ -66,7 +70,7 @@ public class Dashboard extends JFrame {
 		btnDashboard.setContentAreaFilled(true);
 		btnDashboard.setOpaque(true);
 		btnDashboard.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
-		
+
 		JButton btnTransaction = new JButton("💸 Transaction");
 		btnTransaction.setHorizontalAlignment(SwingConstants.LEFT);
 		btnTransaction.setBackground(navBgColor);
@@ -77,7 +81,7 @@ public class Dashboard extends JFrame {
 		btnTransaction.setContentAreaFilled(true);
 		btnTransaction.setOpaque(true);
 		btnTransaction.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
-		
+
 		JButton btnReport = new JButton("📄 Transaction History");
 		btnReport.setHorizontalAlignment(SwingConstants.LEFT);
 		btnReport.setBackground(navBgColor);
@@ -88,7 +92,7 @@ public class Dashboard extends JFrame {
 		btnReport.setContentAreaFilled(true);
 		btnReport.setOpaque(true);
 		btnReport.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
-		
+
 		JButton btnAccount = new JButton("👤 Account");
 		btnAccount.setHorizontalAlignment(SwingConstants.LEFT);
 		btnAccount.setBackground(navBgColor);
@@ -99,7 +103,7 @@ public class Dashboard extends JFrame {
 		btnAccount.setContentAreaFilled(true);
 		btnAccount.setOpaque(true);
 		btnAccount.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
-		
+
 		JButton btnLogout = new JButton("🚪 Logout");
 		btnLogout.setHorizontalAlignment(SwingConstants.LEFT);
 		btnLogout.setBackground(navBgColor);
@@ -110,6 +114,7 @@ public class Dashboard extends JFrame {
 		btnLogout.setContentAreaFilled(true);
 		btnLogout.setOpaque(true);
 		btnLogout.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
+
 
 		// PANEL to contain buttons
 		JPanel buttonPanel = new JPanel();
@@ -123,8 +128,22 @@ public class Dashboard extends JFrame {
 		buttonPanel.add(btnReport);
 		buttonPanel.add(btnAccount);
 
+
+		JButton btnNotification = new JButton("🔔 Notification");
+		btnNotification.setOpaque(true);
+		btnNotification.setHorizontalAlignment(SwingConstants.LEFT);
+		btnNotification.setCursor(new Cursor(Cursor.HAND_CURSOR));
+		btnNotification.setFont(new Font("SansSerif", Font.BOLD, 15));
+		btnNotification.setFocusPainted(false);
+		btnNotification.setContentAreaFilled(true);
+		btnNotification.setBorderPainted(false);
+		btnNotification.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
+		btnNotification.setBackground(Color.WHITE);
+		buttonPanel.add(btnNotification);
+
 		// SPACER
 		buttonPanel.add(Box.createVerticalGlue());
+
 
 		// INFO PANEL (Bottom user info)
 		JPanel infoPanel = new JPanel();
@@ -147,7 +166,7 @@ public class Dashboard extends JFrame {
 		buttonPanel.add(btnLogout);
 
 		// Mouse Hover Effect for All Buttons
-		buttons = new JButton[] {btnDashboard, btnTransaction, btnReport, btnAccount, btnLogout};
+		buttons = new JButton[] {btnDashboard, btnTransaction, btnReport, btnAccount, btnNotification, btnLogout};
 		activeButton = btnDashboard;
 
 		for (JButton button : buttons) {
@@ -171,14 +190,18 @@ public class Dashboard extends JFrame {
 		btnTransaction.addActionListener(e -> setActiveButton(btnTransaction));
 		btnReport.addActionListener(e -> setActiveButton(btnReport));
 		btnAccount.addActionListener(e -> setActiveButton(btnAccount));
+		btnNotification.addActionListener(e -> setActiveButton(btnNotification));
 
 		// LOGOUT BUTTON BEHAVIOR
 		btnLogout.addActionListener(e -> {
-			dispose();
-			Login login = new Login();
-			login.setVisible(true);
-			login.setLocationRelativeTo(null);
-		});
+			int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Confirm", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+    			dispose();
+    			Login login = new Login();
+    			login.setVisible(true);
+    			login.setLocationRelativeTo(null);
+            }
+        });
 
 
 		JPanel switchpanel = new JPanel();
@@ -199,13 +222,23 @@ public class Dashboard extends JFrame {
 		JPanel dashboardheaderpanel = new JPanel();
 		dashboardheaderpanel.setBackground(new Color(52, 58, 64)); // Darker header (professional)
 		dashboardheaderpanel.setPreferredSize(new Dimension(0, 80));
-		dashboardheaderpanel.setLayout(new FlowLayout(FlowLayout.LEFT, 20, 25));
+		dashboardheaderpanel.setLayout(new GridLayout(0, 2, 0, 0));
+		dashboardheaderpanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
 
-		JLabel lblNewLabel = new JLabel("🏦 Northland Bank Dashboard"); // Icon touch
+		JLabel lblNewLabel = new JLabel("🏦 Northland Bank Dashboard");
+		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
 		lblNewLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 24));
 		lblNewLabel.setForeground(Color.WHITE); // White text on dark background
 		dashboardheaderpanel.add(lblNewLabel);
 		dashboardpanel2.add(dashboardheaderpanel, BorderLayout.NORTH);
+
+		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\Downloads\\bankicon-removebg-preview.png");
+		Image scaledImage = originalIcon.getImage().getScaledInstance(80, 70, Image.SCALE_SMOOTH); // width, height
+		ImageIcon resizedIcon = new ImageIcon(scaledImage);
+
+		JLabel bankIcon = new JLabel(resizedIcon);
+		bankIcon.setHorizontalAlignment(SwingConstants.RIGHT);
+		dashboardheaderpanel.add(bankIcon);
 
 		// --- RECENT TRANSACTIONS ---
 		JPanel recentTransactionpanel = new JPanel();
@@ -264,7 +297,7 @@ public class Dashboard extends JFrame {
 		lblLoanBalance.setForeground(new Color(33, 37, 41));
 		lblLoanBalance.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		
+
 		JLabel lblLoanBalanceAmount;
 		if (account instanceof LoanAccount) {
 			lblLoanBalanceAmount = new JLabel(String.format("₱%,.2f", ((LoanAccount) account).getLoanBalance()));
@@ -285,28 +318,7 @@ public class Dashboard extends JFrame {
 
 		balancepanel.add(balanceheaderpanel, BorderLayout.CENTER);
 
-		// --- FOOTER (Notifications) ---
-		JPanel notificationpanel = new JPanel();
-		notificationpanel.setBackground(new Color(248, 249, 250));
-		notificationpanel.setPreferredSize(new Dimension(0, 120)); 
-		notificationpanel.setLayout(new BorderLayout()); 
-
 		
-		DefaultListModel<String> notificationListModel = new DefaultListModel<>();
-
-		
-		JList<String> notificationList = new JList<>(notificationListModel);
-		notificationList.setFont(new Font("Roboto", Font.PLAIN, 14));
-		notificationList.setForeground(new Color(108, 117, 125));
-
-		
-		JScrollPane scrollPane1 = new JScrollPane(notificationList);
-		scrollPane1.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS); // Always show vertical scroll bar
-
-		
-		notificationpanel.add(scrollPane1, BorderLayout.CENTER);
-
-		dashboardpanel2.add(notificationpanel, BorderLayout.SOUTH);
 
 
 		// TRANSACTION PANEL SETUP
@@ -320,14 +332,26 @@ public class Dashboard extends JFrame {
 		JPanel transactionPanel1 = new JPanel();
 		transactionPanel.add(transactionPanel1, "TransactionMain");
 		transactionPanel1.setLayout(new BorderLayout(20, 20));
-		transactionPanel1.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));//s
+		transactionPanel1.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-		// Title
-		JLabel transactionTitle = new JLabel("💸 Transaction");
-		transactionTitle.setFont(new Font("Roboto", Font.BOLD, 30));
-		transactionTitle.setForeground(new Color(33, 37, 41)); 
+		// --- HEADER ---
+		JPanel transactionHeaderPanel = new JPanel();
+		transactionHeaderPanel.setBackground(new Color(240, 240, 240)); // Darker header (professional)
+		transactionHeaderPanel.setPreferredSize(new Dimension(0, 80));
+		transactionHeaderPanel.setLayout(new GridLayout(0, 2, 0, 0));
+		transactionHeaderPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
+
+		JLabel transactionTitle = new JLabel("💸 Transaction Panel");
 		transactionTitle.setHorizontalAlignment(SwingConstants.CENTER);
-		transactionPanel1.add(transactionTitle, BorderLayout.NORTH);
+		transactionTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 24));
+		transactionTitle.setForeground(Color.BLACK); // White text on dark background
+		transactionHeaderPanel.add(transactionTitle);
+
+		JLabel transactionIcon = new JLabel(resizedIcon);
+		transactionIcon.setHorizontalAlignment(SwingConstants.RIGHT);
+		transactionHeaderPanel.add(transactionIcon);
+
+		transactionPanel1.add(transactionHeaderPanel, BorderLayout.NORTH);
 
 		// Main content panel
 		JPanel contentPanel = new JPanel();
@@ -364,7 +388,7 @@ public class Dashboard extends JFrame {
 		lblAccountType.setHorizontalAlignment(SwingConstants.CENTER);
 		JLabel lblAccountTypeValue = new JLabel(account.getAccountType());
 		lblAccountTypeValue.setForeground(new Color(33, 37, 41)); 
-		
+
 		accountInfoPanel.add(lblAccountNumber);
 		accountInfoPanel.add(txtAccountNumber);
 		accountInfoPanel.add(lblAccountHolder);
@@ -476,6 +500,299 @@ public class Dashboard extends JFrame {
 
 
 
+
+		JPanel transactionHistory = new JPanel();
+		switchpanel.add(transactionHistory, "name_695650282872100");
+		transactionHistory.setLayout(new CardLayout(0, 0));
+		transactionHistory.setVisible(false);
+
+		JPanel transactionHistoryPanel = new JPanel(new BorderLayout(20, 20));
+		transactionHistoryPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+		transactionHistory.add(transactionHistoryPanel);
+
+		// --- HEADER ---
+		JPanel transactionHistoryHeaderPanel = new JPanel();
+		transactionHistoryHeaderPanel.setBackground(new Color(240, 240, 240)); // Darker header (professional)
+		transactionHistoryHeaderPanel.setPreferredSize(new Dimension(0, 80));
+		transactionHistoryHeaderPanel.setLayout(new GridLayout(0, 2, 0, 0));
+		transactionHistoryHeaderPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
+
+		JLabel transactionHistoryTitle = new JLabel("📜 Transaction History");
+		transactionHistoryTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		transactionHistoryTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 24));
+		transactionHistoryTitle.setForeground(Color.BLACK); // White text on dark background
+		transactionHistoryHeaderPanel.add(transactionHistoryTitle);
+
+		JLabel transactionHistoryIcon = new JLabel(resizedIcon);
+		transactionHistoryIcon.setHorizontalAlignment(SwingConstants.RIGHT);
+		transactionHistoryHeaderPanel.add(transactionHistoryIcon);
+
+		transactionHistoryPanel.add(transactionHistoryHeaderPanel, BorderLayout.NORTH);
+
+		// Table Setup
+		String[] columnNames = { "Date", "Type", "Amount", "Recipient" };
+		DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+		    @Override
+		    public boolean isCellEditable(int row, int column) {
+		        return false;
+		    }
+		};
+
+		JTable transactionTable = new JTable(tableModel);
+		
+		// --- Styling the JTable ---
+		transactionTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		transactionTable.setRowHeight(30); 
+		transactionTable.setFillsViewportHeight(true); 
+
+		// Alternate row color
+		transactionTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+		    @Override
+		    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+		                                                   boolean hasFocus, int row, int column) {
+		        Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+		        if (!isSelected) {
+		            c.setBackground(row % 2 == 0 ? new Color(245, 245, 245) : Color.WHITE); 
+		        } else {
+		            c.setBackground(new Color(200, 230, 255)); 
+		        }
+		        return c;
+		    }
+		});
+
+		// Table header styling
+		JTableHeader header = transactionTable.getTableHeader();
+		header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+		header.setBackground(new Color(220, 220, 220));
+		header.setForeground(Color.BLACK);
+		header.setReorderingAllowed(false); // Optional: disable column drag
+
+		// Scrollable Table
+		JScrollPane scrollPane = new JScrollPane(transactionTable);
+		scrollPane.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200))); 
+		transactionHistoryPanel.add(scrollPane, BorderLayout.CENTER);
+
+		// Only Refresh Button Panel
+		JPanel buttonPanel1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10)); // LEFT aligned
+		JButton btnRefresh = new JButton("🔄 Refresh");
+		buttonPanel1.add(btnRefresh);
+
+		// Add only the refresh button panel to SOUTH
+		transactionHistoryPanel.add(buttonPanel1, BorderLayout.SOUTH);
+
+		btnRefresh.addActionListener(e -> {
+			updateTransactionTable(tableModel, account); // Refresh the table when the user clicks "Refresh"
+		});
+
+
+
+
+		// ACCOUNT INFORMATION PANEL SETUP
+		JPanel accountInformationPanel = new JPanel();
+		switchpanel.add(accountInformationPanel, "name_695650313995900");
+		accountInformationPanel.setLayout(new CardLayout(0, 0));
+		accountInformationPanel.setVisible(false);
+		accountInformationPanel.setBackground(new Color(245, 245, 245)); // Light gray background
+
+		// Main panel inside account information
+		JPanel accountInformationPanel1 = new JPanel();
+		accountInformationPanel.add(accountInformationPanel1, "AccountInfo");
+		accountInformationPanel1.setLayout(new BorderLayout(20, 20));
+		accountInformationPanel1.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Padding
+
+		// --- HEADER ---
+		JPanel accountInformationHeaderPanel = new JPanel();
+		accountInformationHeaderPanel.setBackground(new Color(240, 240, 240)); // Darker header (professional)
+		accountInformationHeaderPanel.setPreferredSize(new Dimension(0, 80));
+		accountInformationHeaderPanel.setLayout(new GridLayout(0, 2, 0, 0));
+		accountInformationHeaderPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
+
+		JLabel accountInformationTitle = new JLabel("👤 Account Information");
+		accountInformationTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		accountInformationTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 24));
+		accountInformationTitle.setForeground(Color.BLACK); // White text on dark background
+		accountInformationHeaderPanel.add(accountInformationTitle);
+
+		JLabel accountInformationIcon = new JLabel(resizedIcon);
+		accountInformationIcon.setHorizontalAlignment(SwingConstants.RIGHT);
+		accountInformationHeaderPanel.add(accountInformationIcon);
+
+		accountInformationPanel1.add(accountInformationHeaderPanel, BorderLayout.NORTH);
+
+		// Main content panel
+		JPanel accountContentPanel = new JPanel();
+		accountContentPanel.setLayout(new GridLayout(4, 1, 20, 20));
+		accountContentPanel.setBackground(new Color(245, 245, 245));
+
+		// Wrap accountContentPanel in a ScrollPane
+		JScrollPane accountScrollPane = new JScrollPane(accountContentPanel);
+		accountScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		accountScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		accountInformationPanel1.add(accountScrollPane, BorderLayout.CENTER);
+
+		// ========== ACCOUNT HOLDER NAME ==========
+		JPanel accountHolderPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+		accountHolderPanel.setBorder(BorderFactory.createTitledBorder("Account Holder Name"));
+		accountHolderPanel.setBackground(new Color(255, 255, 255));
+		accountHolderPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+
+		JLabel lblUsernameAccount = new JLabel("Name:");
+		lblUsernameAccount.setHorizontalAlignment(SwingConstants.CENTER);
+		JLabel lblUsernameInfo = new JLabel(account.getOwner().getName());
+		lblUsernameInfo.setHorizontalAlignment(SwingConstants.CENTER);
+
+		accountHolderPanel.add(lblUsernameAccount);
+		accountHolderPanel.add(lblUsernameInfo);
+		accountContentPanel.add(accountHolderPanel);
+
+		// ========== ACCOUNT NUMBER ==========
+		JPanel accountNumberPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+		accountNumberPanel.setBorder(BorderFactory.createTitledBorder("Account Number"));
+		accountNumberPanel.setBackground(new Color(255, 255, 255));
+		accountNumberPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+
+		JLabel lblAccountNumberInfo = new JLabel("Number:");
+		lblAccountNumberInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		JLabel lblAccountNumberView = new JLabel(account.getAccountNumber());
+		lblAccountNumberView.setHorizontalAlignment(SwingConstants.CENTER);
+
+		accountNumberPanel.add(lblAccountNumberInfo);
+		accountNumberPanel.add(lblAccountNumberView);
+		accountContentPanel.add(accountNumberPanel);
+
+		// ========== ACCOUNT TYPE ==========
+		JPanel accountTypePanel = new JPanel(new GridLayout(1, 2, 10, 10));
+		accountTypePanel.setBorder(BorderFactory.createTitledBorder("Account Type"));
+		accountTypePanel.setBackground(new Color(255, 255, 255));
+		accountTypePanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+
+		JLabel lblAccountTypeInfo = new JLabel("Type:");
+		lblAccountTypeInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		JLabel lblAccountTypeView = new JLabel(account.getAccountType());
+		lblAccountTypeView.setHorizontalAlignment(SwingConstants.CENTER);
+
+		accountTypePanel.add(lblAccountTypeInfo);
+		accountTypePanel.add(lblAccountTypeView);
+		accountContentPanel.add(accountTypePanel);
+
+		// ========== ACCOUNT BALANCE ==========
+		JPanel accountBalancePanel = new JPanel(new GridLayout(1, 2, 10, 10));
+		accountBalancePanel.setBorder(BorderFactory.createTitledBorder("Account Balance"));
+		accountBalancePanel.setBackground(new Color(255, 255, 255));
+		accountBalancePanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
+
+		JLabel lblAccountBalanceInfo = new JLabel("Balance:");
+		lblAccountBalanceInfo.setHorizontalAlignment(SwingConstants.CENTER);
+		JLabel lblAccountBalanceView = new JLabel(String.format("₱%,.2f", account.getBalance()));
+		lblAccountBalanceView.setHorizontalAlignment(SwingConstants.CENTER);
+
+		accountBalancePanel.add(lblAccountBalanceInfo);
+		accountBalancePanel.add(lblAccountBalanceView);
+		accountContentPanel.add(accountBalancePanel);
+
+		// ========== NOTIFICATION PANEL SETUP ==========
+		JPanel notificationPanel = new JPanel();
+		switchpanel.add(notificationPanel, "name_Notifications");
+		notificationPanel.setLayout(new CardLayout(0, 0));
+		notificationPanel.setVisible(false);
+		notificationPanel.setBackground(new Color(245, 245, 245)); // Light gray background
+
+		// Main panel inside notification
+		JPanel notificationPanel1 = new JPanel();
+		notificationPanel.add(notificationPanel1, "NotificationsMain");
+		notificationPanel1.setLayout(new BorderLayout(20, 20));
+		notificationPanel1.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Padding
+
+		// --- HEADER ---
+		JPanel notificationHeaderPanel = new JPanel();
+		notificationHeaderPanel.setBackground(new Color(240, 240, 240)); // Darker header (professional)
+		notificationHeaderPanel.setPreferredSize(new Dimension(0, 80));
+		notificationHeaderPanel.setLayout(new GridLayout(0, 2, 0, 0));
+		notificationHeaderPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 20));
+
+		JLabel notificationTitle = new JLabel("🔔 Notifications");
+		notificationTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		notificationTitle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 24));
+		notificationTitle.setForeground(Color.BLACK);
+		notificationHeaderPanel.add(notificationTitle);
+
+		JLabel notificationIcon = new JLabel(resizedIcon);
+		notificationIcon.setHorizontalAlignment(SwingConstants.RIGHT);
+		notificationHeaderPanel.add(notificationIcon);
+
+		notificationPanel1.add(notificationHeaderPanel, BorderLayout.NORTH);
+
+		// --- CONTENT PANEL (REPLACEMENT) ---
+		notificationContentPanel = new JPanel();
+		notificationContentPanel.setLayout(new BoxLayout(notificationContentPanel, BoxLayout.Y_AXIS));
+		notificationContentPanel.setBackground(new Color(245, 245, 245));
+
+		// Scroll pane wrapping the content
+		JScrollPane notificationScrollPane = new JScrollPane(notificationContentPanel);
+		notificationScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		notificationScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		notificationScrollPane.setBorder(BorderFactory.createEmptyBorder());
+		notificationPanel1.add(notificationScrollPane, BorderLayout.CENTER);
+
+
+
+
+		//Switching panel
+		btnNotification.addMouseListener(new MouseAdapter() {
+
+			public void mouseClicked(MouseEvent e) {
+				dashboardpanel1.setVisible(false);
+				transactionPanel.setVisible(false);
+				transactionHistory.setVisible(false);
+				accountInformationPanel.setVisible(false);
+				notificationPanel.setVisible(true);
+			}
+		});
+
+		btnTransaction.addMouseListener(new MouseAdapter() {
+
+			public void mouseClicked(MouseEvent e) {
+				dashboardpanel1.setVisible(false);
+				transactionPanel.setVisible(true);
+				transactionHistory.setVisible(false);
+				accountInformationPanel.setVisible(false);
+				notificationPanel.setVisible(false);
+			}
+		});
+
+		btnDashboard.addMouseListener(new MouseAdapter() {
+
+			public void mouseClicked(MouseEvent e) {
+				dashboardpanel1.setVisible(true);
+				transactionPanel.setVisible(false);
+				transactionHistory.setVisible(false);
+				accountInformationPanel.setVisible(false);
+				notificationPanel.setVisible(false);
+
+			}
+		});
+
+		btnReport.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				dashboardpanel1.setVisible(false);
+				transactionPanel.setVisible(false);
+				transactionHistory.setVisible(true);
+				accountInformationPanel.setVisible(false);
+				notificationPanel.setVisible(false);
+			}
+		});
+
+		btnAccount.addMouseListener(new MouseAdapter() {
+			public void mouseClicked(MouseEvent e) {
+				dashboardpanel1.setVisible(false);
+				transactionPanel.setVisible(false);
+				transactionHistory.setVisible(false);
+				accountInformationPanel.setVisible(true);
+				notificationPanel.setVisible(false);
+			}
+		});
+
+
 		// ========== SUBMIT LOGIC (Sample) ==========
 		btnSubmitTransaction.addActionListener(e -> {
 			String selectedAccountType = lblAccountTypeValue.getText().toString();
@@ -572,6 +889,10 @@ public class Dashboard extends JFrame {
 
 			if (transactionSuccess) {
 				lblbalance1.setText("Balance: ₱" + String.format("%.2f", account.getBalance()));
+				lblAccountBalanceView.setText(String.format("%.2f", account.getBalance()));
+
+
+
 				LowBalanceNotifier.checkAndNotify(account);
 				if (account instanceof LoanAccount) {
 					lblLoanBalanceAmount.setText(String.format("₱%,.2f", ((LoanAccount) account).getLoanBalance()));
@@ -589,7 +910,7 @@ public class Dashboard extends JFrame {
 
 				JOptionPane.showMessageDialog(this, successMessage, "Success", JOptionPane.INFORMATION_MESSAGE);
 				JOptionPane.showMessageDialog(this, message, "Transaction Submitted", JOptionPane.INFORMATION_MESSAGE);
-				
+
 				if (account.getBalance() == 0) {
 					if (account instanceof CheckingAccount) {
 						((CheckingAccount) account).showRemainingOverdraft(); 
@@ -597,16 +918,23 @@ public class Dashboard extends JFrame {
 				}
 
 				// Update Notifications and Recent Transactions
+				java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
+				String date = null;
+				for (Transaction transaction1 : transactions) {
+					date = transaction1.getDate().toString();
+				}
 				if (transactionType.equals("Transferred")) {
-					notificationListModel.addElement("🔔 Transfer of ₱" + amount + " successful.");
+					addNotification("Transfer Completed", "You transferred PHP " + amount + ".", date);
+
 					recentTransactionListModel.addElement("• Transferred: ₱" + amount);
 				} 
 				else if (transactionType.equals("Loan Payment")) {
-					notificationListModel.addElement("🔔 Loan payment of ₱" + amount + " received.");
+					addNotification("Loan Payment", "You paid a loan of PHP " + amount + ".", date);
+
 					recentTransactionListModel.addElement("• Loan Payment: ₱" + amount);
 				} 
 				else {
-					notificationListModel.addElement("🔔 " + transactionType + " ₱" + amount + " successful.");
+					 addNotification(transactionType + " Completed", "Transaction of PHP " + amount + " successful.", date);
 					recentTransactionListModel.addElement("• " + transactionType + ": ₱" + amount);
 				}
 
@@ -618,208 +946,34 @@ public class Dashboard extends JFrame {
 			}
 
 		});
-		
-		
-		JPanel transactionHistory = new JPanel();
-		switchpanel.add(transactionHistory, "name_695650282872100");
-		transactionHistory.setLayout(new CardLayout(0, 0));
-		transactionHistory.setVisible(false);
-		
-		JPanel transactionHistoryPanel = new JPanel(new BorderLayout(20, 20));
-		transactionHistoryPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-		transactionHistory.add(transactionHistoryPanel);
-
-		// Title
-		JLabel historyTitle = new JLabel("📜 Transaction History");
-		historyTitle.setFont(new Font("Roboto", Font.BOLD, 30));
-		historyTitle.setHorizontalAlignment(SwingConstants.CENTER);
-		transactionHistoryPanel.add(historyTitle, BorderLayout.NORTH);
-
-		// Table Setup
-		String[] columnNames = { "Date", "Type", "Amount", "Recipient" };
-		DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0);
-		
-		JTable transactionTable = new JTable(tableModel);
-
-		// Scrollable Table
-		JScrollPane scrollPane = new JScrollPane(transactionTable);
-		transactionHistoryPanel.add(scrollPane, BorderLayout.CENTER);
-
-		// Only Refresh Button Panel
-		JPanel buttonPanel1 = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10)); // LEFT aligned
-		JButton btnRefresh = new JButton("🔄 Refresh");
-		buttonPanel1.add(btnRefresh);
-
-		// Add only the refresh button panel to SOUTH
-		transactionHistoryPanel.add(buttonPanel1, BorderLayout.SOUTH);
-		
-		btnRefresh.addActionListener(e -> {
-		    updateTransactionTable(tableModel, account); // Refresh the table when the user clicks "Refresh"
-		});
 
 
 
-		
-		// ACCOUNT INFORMATION PANEL SETUP
-		JPanel accountInformationPanel = new JPanel();
-		switchpanel.add(accountInformationPanel, "name_695650313995900");
-		accountInformationPanel.setLayout(new CardLayout(0, 0));
-		accountInformationPanel.setVisible(false);
-		accountInformationPanel.setBackground(new Color(245, 245, 245)); // Light gray background
 
-		// Main panel inside account information
-		JPanel accountInformationPanel1 = new JPanel();
-		accountInformationPanel.add(accountInformationPanel1, "AccountInfo");
-		accountInformationPanel1.setLayout(new BorderLayout(20, 20));
-		accountInformationPanel1.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Padding
-
-		// Title
-		JLabel lblAccountInformationTitle = new JLabel("👤 Account Information");
-		lblAccountInformationTitle.setFont(new Font("Roboto", Font.BOLD, 30));
-		lblAccountInformationTitle.setForeground(new Color(33, 37, 41));
-		lblAccountInformationTitle.setHorizontalAlignment(SwingConstants.CENTER);
-		accountInformationPanel1.add(lblAccountInformationTitle, BorderLayout.NORTH);
-
-		// Main content panel
-		JPanel accountContentPanel = new JPanel();
-		accountContentPanel.setLayout(new GridLayout(4, 1, 20, 20));
-		accountContentPanel.setBackground(new Color(245, 245, 245));
-
-		// Wrap accountContentPanel in a ScrollPane
-		JScrollPane accountScrollPane = new JScrollPane(accountContentPanel);
-		accountScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-		accountScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-		accountInformationPanel1.add(accountScrollPane, BorderLayout.CENTER);
-
-		// ========== ACCOUNT HOLDER NAME ==========
-		JPanel accountHolderPanel = new JPanel(new GridLayout(1, 2, 10, 10));
-		accountHolderPanel.setBorder(BorderFactory.createTitledBorder("Account Holder Name"));
-		accountHolderPanel.setBackground(new Color(255, 255, 255));
-		accountHolderPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
-
-		JLabel lblUsernameAccount = new JLabel("Name:");
-		lblUsernameAccount.setHorizontalAlignment(SwingConstants.CENTER);
-		JLabel lblUsernameInfo = new JLabel(account.getOwner().getName());
-		lblUsernameInfo.setHorizontalAlignment(SwingConstants.CENTER);
-
-		accountHolderPanel.add(lblUsernameAccount);
-		accountHolderPanel.add(lblUsernameInfo);
-		accountContentPanel.add(accountHolderPanel);
-
-		// ========== ACCOUNT NUMBER ==========
-		JPanel accountNumberPanel = new JPanel(new GridLayout(1, 2, 10, 10));
-		accountNumberPanel.setBorder(BorderFactory.createTitledBorder("Account Number"));
-		accountNumberPanel.setBackground(new Color(255, 255, 255));
-		accountNumberPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
-
-		JLabel lblAccountNumberInfo = new JLabel("Number:");
-		lblAccountNumberInfo.setHorizontalAlignment(SwingConstants.CENTER);
-		JLabel lblAccountNumberView = new JLabel(account.getAccountNumber());
-		lblAccountNumberView.setHorizontalAlignment(SwingConstants.CENTER);
-
-		accountNumberPanel.add(lblAccountNumberInfo);
-		accountNumberPanel.add(lblAccountNumberView);
-		accountContentPanel.add(accountNumberPanel);
-
-		// ========== ACCOUNT TYPE ==========
-		JPanel accountTypePanel = new JPanel(new GridLayout(1, 2, 10, 10));
-		accountTypePanel.setBorder(BorderFactory.createTitledBorder("Account Type"));
-		accountTypePanel.setBackground(new Color(255, 255, 255));
-		accountTypePanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
-
-		JLabel lblAccountTypeInfo = new JLabel("Type:");
-		lblAccountTypeInfo.setHorizontalAlignment(SwingConstants.CENTER);
-		JLabel lblAccountTypeView = new JLabel(account.getAccountType());
-		lblAccountTypeView.setHorizontalAlignment(SwingConstants.CENTER);
-
-		accountTypePanel.add(lblAccountTypeInfo);
-		accountTypePanel.add(lblAccountTypeView);
-		accountContentPanel.add(accountTypePanel);
-
-		// ========== ACCOUNT BALANCE ==========
-		JPanel accountBalancePanel = new JPanel(new GridLayout(1, 2, 10, 10));
-		accountBalancePanel.setBorder(BorderFactory.createTitledBorder("Account Balance"));
-		accountBalancePanel.setBackground(new Color(255, 255, 255));
-		accountBalancePanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
-
-		JLabel lblAccountBalanceInfo = new JLabel("Balance:");
-		lblAccountBalanceInfo.setHorizontalAlignment(SwingConstants.CENTER);
-		JLabel lblAccountBalanceView = new JLabel(String.format("₱%,.2f", account.getBalance()));
-		lblAccountBalanceView.setHorizontalAlignment(SwingConstants.CENTER);
-
-		accountBalancePanel.add(lblAccountBalanceInfo);
-		accountBalancePanel.add(lblAccountBalanceView);
-		accountContentPanel.add(accountBalancePanel);
-
-
-
-		//Switching panel
-		btnTransaction.addMouseListener(new MouseAdapter() {
-
-			public void mouseClicked(MouseEvent e) {
-				dashboardpanel1.setVisible(false);
-				transactionPanel.setVisible(true);
-				transactionHistory.setVisible(false);
-				accountInformationPanel.setVisible(false);
-			}
-		});
-
-		btnDashboard.addMouseListener(new MouseAdapter() {
-
-			public void mouseClicked(MouseEvent e) {
-				dashboardpanel1.setVisible(true);
-				transactionPanel.setVisible(false);
-				transactionHistory.setVisible(false);
-				accountInformationPanel.setVisible(false);
-				
-			}
-		});
-		
-		btnReport.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				dashboardpanel1.setVisible(false);
-				transactionPanel.setVisible(false);
-				transactionHistory.setVisible(true);
-				accountInformationPanel.setVisible(false);
-			}
-		});
-		
-		btnAccount.addMouseListener(new MouseAdapter() {
-			public void mouseClicked(MouseEvent e) {
-				dashboardpanel1.setVisible(false);
-				transactionPanel.setVisible(false);
-				transactionHistory.setVisible(false);
-				accountInformationPanel.setVisible(true);
-			}
-		});
-		
-		
-		
-		
 	}
-	
+
 	public void updateTransactionTable(DefaultTableModel tableModel, Account account) {
-	    java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
-	    tableModel.setRowCount(0); // Clear existing rows
+		java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
+		tableModel.setRowCount(0); // Clear existing rows
 
-	    for (Transaction transaction : transactions) {
-	        String date = transaction.getDate().toString();
-	        String type = transaction.getAction();
-	        String amount = String.format("₱%.2f", transaction.getAmount());
-	        String recipient = account.getOwner().getName(); // Default recipient
+		for (Transaction transaction : transactions) {
+			String date = transaction.getDate().toString();
+			String type = transaction.getAction();
+			String amount = String.format("₱%.2f", transaction.getAmount());
+			String recipient = account.getOwner().getName(); // Default recipient
 
-	        // Handle transfers
-	        if (type.startsWith("Transfer to ")) {
-	            recipient = type.substring(12); // Extract recipient from action text
-	            type = "Transfer Sent";
-	        } else if (type.startsWith("Transfer from ")) {
-	            recipient = type.substring(14); // Extract recipient from action text
-	            type = "Transfer Received";
-	        }
+			// Handle transfers
+			if (type.startsWith("Transfer to ")) {
+				recipient = type.substring(12); // Extract recipient from action text
+				type = "Transfer Sent";
+			} else if (type.startsWith("Transfer from ")) {
+				recipient = type.substring(14); // Extract recipient from action text
+				type = "Transfer Received";
+			}
 
-	        // Add row to table
-	        tableModel.addRow(new Object[]{date, type, amount, recipient});
-	    }
+			// Add row to table
+			tableModel.addRow(new Object[]{date, type, amount, recipient});
+		}
 	}
 
 	private void updateRecentTransactions() {
@@ -841,8 +995,43 @@ public class Dashboard extends JFrame {
 		activeButton = selectedButton;
 	}
 
-	
-	
+	// --- ADD NOTIFICATION METHOD ---
+	public void addNotification(String title, String message, String date) {
+	    JPanel notificationItemPanel = new JPanel(new BorderLayout());
+	    notificationItemPanel.setBackground(Color.WHITE);
+	    notificationItemPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+	    notificationItemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
+
+	    // Text area
+	    JPanel textPanel = new JPanel();
+	    textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+	    textPanel.setBackground(Color.WHITE);
+
+	    JLabel titleLabel = new JLabel("• " + title);
+	    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+	    titleLabel.setForeground(Color.BLACK);
+
+	    JLabel messageLabel = new JLabel(message);
+	    messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+	    messageLabel.setForeground(Color.DARK_GRAY);
+
+	    textPanel.add(titleLabel);
+	    textPanel.add(messageLabel);
+
+	    // Date label
+	    JLabel dateLabel = new JLabel(date);
+	    dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+	    dateLabel.setForeground(Color.GRAY);
+	    dateLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+
+	    notificationItemPanel.add(textPanel, BorderLayout.CENTER);
+	    notificationItemPanel.add(dateLabel, BorderLayout.EAST);
+
+	    // Add to main list
+	    notificationContentPanel.add(notificationItemPanel);
+	    notificationContentPanel.revalidate();
+	    notificationContentPanel.repaint();
+	}
 
 
 }

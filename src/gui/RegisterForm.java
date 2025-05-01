@@ -25,14 +25,28 @@ public class RegisterForm extends JFrame {
 		JPanel mainPanel = new JPanel();
 		mainPanel.setBackground(new Color(249, 249, 249));
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-		add(mainPanel);
+		getContentPane().add(mainPanel);
+		
+		JPanel headerPanel = new JPanel();
+		headerPanel.setBackground(new Color(255, 255, 255));
+		FlowLayout flowLayout = (FlowLayout) headerPanel.getLayout();
+		mainPanel.add(headerPanel);
 
 		// Header
 		JLabel headerTitle = new JLabel("Northland Bank Account Registration Form");
+		headerPanel.add(headerTitle);
+		headerTitle.setHorizontalAlignment(SwingConstants.CENTER);
 		headerTitle.setFont(new Font("Arial", Font.BOLD, 22));
 		headerTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 		headerTitle.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
-		mainPanel.add(headerTitle);
+		
+		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\Downloads\\bankicon-removebg-preview.png");
+		Image scaledImage = originalIcon.getImage().getScaledInstance(60, 50, Image.SCALE_SMOOTH); // width, height
+		ImageIcon resizedIcon = new ImageIcon(scaledImage);
+
+		JLabel bankIcon = new JLabel(resizedIcon);
+		bankIcon.setHorizontalAlignment(SwingConstants.RIGHT);
+		headerPanel.add(bankIcon);
 
 		// Personal Information Panel
 		JPanel personalPanel = new JPanel();
