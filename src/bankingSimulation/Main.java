@@ -5,6 +5,7 @@ import system.Account;
 import system.AccountFactory;
 import system.BankLedger;
 import system.Customer;
+import system.LoanAccount;
 
 public class Main {
 
@@ -17,6 +18,7 @@ public class Main {
 		Account account = AccountFactory.createAccount("Checking", testCustomer);
 		Account newAccount = AccountFactory.createAccount("Loan", testCustomer);
 		account.deposit(2000);
+		((LoanAccount) newAccount).borrow(2000);
 		BankLedger bankLedger = BankLedger.getInstance();
         bankLedger.addAccount(account);
         testCustomer.addAccount(account);

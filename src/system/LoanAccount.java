@@ -15,12 +15,32 @@ public class LoanAccount extends Account {
 		return loanBalance;
 	}
 
+	@Override
+	public boolean deposit(double amount) {
+		if (amount <= 0) {
+			JOptionPane.showMessageDialog(null, "Deposit amount must be positive.", "Invalid Deposit", JOptionPane.ERROR_MESSAGE);
+			return false;
+		}
+
+		if (amount > loanBalance) {
+			amount -= loanBalance;
+			loanBalance = 0;
+		} else {
+			loanBalance -= amount;
+		}
+
+		getHistory().addTransaction(new Transaction("Loan Repayment", amount, java.time.LocalDate.now()));
+		return true;
+	}
+
 	public boolean borrow(double amount) {
 		if (amount <= 0) {
 			JOptionPane.showMessageDialog(null, "Borrow amount must be positive.", "Invalid Borrow", JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 		this.loanBalance += amount;
+
+		getHistory().addTransaction(new Transaction("Loan Disbursement", amount, java.time.LocalDate.now()));
 		return true;
 	}
 
@@ -34,24 +54,9 @@ public class LoanAccount extends Account {
 			return false;
 		}
 		loanBalance -= amount;
+
+		getHistory().addTransaction(new Transaction("Loan Repayment", amount, java.time.LocalDate.now()));
 		return true;
 	}
 
-	@Override
-	public boolean withdraw(double amount) {
-		JOptionPane.showMessageDialog(null, "Withdrawals are not allowed from Loan Accounts.", 
-				"Operation Not Allowed", JOptionPane.WARNING_MESSAGE);
-		return false;
-	}
-
-	@Override
-	public boolean deposit(double amount) {
-		if (amount > loanBalance) {
-			amount -= loanBalance;
-			loanBalance = 0;
-		} else {
-			loanBalance -= amount;
-		}
-		return true;
-	}
 }

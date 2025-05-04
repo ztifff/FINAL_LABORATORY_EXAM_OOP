@@ -406,12 +406,24 @@ public class Dashboard extends JFrame {
 		transactionTypePanel.setBackground(new Color(255, 255, 255)); 
 
 		// Checkboxes styling
-		JCheckBox cbDeposit = new JCheckBox("Deposit");
-		cbDeposit.setFont(new Font("Roboto", Font.PLAIN, 16));
-		JCheckBox cbWithdraw = new JCheckBox("Withdraw");
-		cbWithdraw.setFont(new Font("Roboto", Font.PLAIN, 16));
+		String accountType = account.getAccountType();
+
+		JCheckBox cbDeposit;
+		JCheckBox cbWithdraw;
 		JCheckBox cbTransfer = new JCheckBox("Transfer");
 		cbTransfer.setFont(new Font("Roboto", Font.PLAIN, 16));
+
+		if (accountType.equalsIgnoreCase("Loan")) {
+		    cbDeposit = new JCheckBox("Repay Loan");  // Deposit for Loan
+		    cbWithdraw = new JCheckBox("Borrow");     // Withdraw for Loan
+		} else {
+		    cbDeposit = new JCheckBox("Deposit");
+		    cbWithdraw = new JCheckBox("Withdraw");
+		}
+
+		cbDeposit.setFont(new Font("Roboto", Font.PLAIN, 16));
+		cbWithdraw.setFont(new Font("Roboto", Font.PLAIN, 16));
+
 
 		// Adding the checkboxes to the panel
 		transactionTypePanel.add(cbDeposit);
@@ -705,10 +717,20 @@ public class Dashboard extends JFrame {
 		accountBalancePanel.setBackground(new Color(255, 255, 255));
 		accountBalancePanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
 
-		JLabel lblAccountBalanceInfo = new JLabel("Balance:");
+		JLabel lblAccountBalanceInfo = new JLabel();
 		lblAccountBalanceInfo.setHorizontalAlignment(SwingConstants.CENTER);
-		JLabel lblAccountBalanceView = new JLabel(String.format("₱%,.2f", account.getBalance()));
+		JLabel lblAccountBalanceView = new JLabel();
 		lblAccountBalanceView.setHorizontalAlignment(SwingConstants.CENTER);
+
+		if (account instanceof LoanAccount) {
+		    lblAccountBalanceInfo.setText("Loan Balance:");
+		    double loanBalance = ((LoanAccount) account).getLoanBalance();
+		    lblAccountBalanceView.setText(String.format("₱%,.2f", loanBalance));
+		} else {
+		    lblAccountBalanceInfo.setText("Balance:");
+		    lblAccountBalanceView.setText(String.format("₱%,.2f", account.getBalance()));
+		}
+
 
 		accountBalancePanel.add(lblAccountBalanceInfo);
 		accountBalancePanel.add(lblAccountBalanceView);
@@ -750,6 +772,9 @@ public class Dashboard extends JFrame {
 		notificationContentPanel = new JPanel();
 		notificationContentPanel.setLayout(new BoxLayout(notificationContentPanel, BoxLayout.Y_AXIS));
 		notificationContentPanel.setBackground(new Color(245, 245, 245));
+		loadUserNotifications(account);
+		
+		
 
 		// Scroll pane wrapping the content
 		JScrollPane notificationScrollPane = new JScrollPane(notificationContentPanel);
@@ -893,19 +918,23 @@ public class Dashboard extends JFrame {
 			} 
 
 			else if (selectedAccountType.equals("Loan")) {
-				if (cbDeposit.isSelected()) transaction = "Deposit";
-				else if (cbWithdraw.isSelected()) transaction = "Borrow";
-				else if (cbTransfer.isSelected()) transaction = "Repay Loan";
-				if (cbDeposit.isSelected()) {
-					if (account instanceof LoanAccount) {
-						transactionSuccess = ((LoanAccount) account).deposit(amount);
-					} 
-				} else {
-					JOptionPane.showMessageDialog(this, "Only deposits (payments) are allowed for Loan accounts.", 
-							"Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-			} 
+			    if (cbDeposit.isSelected()) {
+			        if (account instanceof LoanAccount) {
+			            transactionSuccess = ((LoanAccount) account).repayLoan(amount);
+			            transactionType = "Loan Payment";
+			        }
+			    } else if (cbWithdraw.isSelected()) {
+			        if (account instanceof LoanAccount) {
+			            transactionSuccess = ((LoanAccount) account).borrow(amount);
+			            transactionType = "Borrowed";
+			        }
+			    } else {
+			        JOptionPane.showMessageDialog(this, "Only Borrow or Repay Loan are allowed for Loan accounts.", 
+			            "Error", JOptionPane.ERROR_MESSAGE);
+			        return;
+			    }
+			}
+
 
 			else {
 				JOptionPane.showMessageDialog(this, "Unknown account type selected.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -919,11 +948,17 @@ public class Dashboard extends JFrame {
 
 
 				LowBalanceNotifier.checkAndNotify(account);
+
 				if (account instanceof LoanAccount) {
-					lblLoanBalanceAmount.setText(String.format("₱%,.2f", ((LoanAccount) account).getLoanBalance()));
+					LoanAccount loanAccount = (LoanAccount) account;
+
+					// Update loan balance display
+					lblLoanBalanceAmount.setText(String.format("₱%,.2f", loanAccount.getLoanBalance()));
+
 				} else {
 					lblLoanBalanceAmount.setText("₱0.00"); 
 				}
+
 
 				String successMessage = switch (transactionType) {
 				case "Withdrawn" -> "Withdrawal successful!";
@@ -975,10 +1010,56 @@ public class Dashboard extends JFrame {
 
 		});
 
-
+		
 
 
 	}
+	public void loadUserNotifications(Account account) {
+		java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
+
+		for (Transaction transaction : transactions) {
+			String rawType = transaction.getAction(); // e.g. "Transfer to Juan"
+			String recipient = "";
+			String type = rawType;
+			double amount = transaction.getAmount();
+			String date = transaction.getDate().toString();
+
+			// Handle transfers
+			if (rawType.startsWith("Transfer to ")) {
+				recipient = rawType.substring(12); // Extract recipient name
+				type = "Transfer Sent";
+			} else if (rawType.startsWith("Transfer from ")) {
+				recipient = rawType.substring(14); // Extract sender name
+				type = "Transfer Received";
+			}
+
+			String message;
+
+			switch (type) {
+				case "Transfer Sent":
+					message = "You transferred PHP " + amount + " to " + recipient + ".";
+					recentTransactionListModel.addElement("• Transferred to " + recipient + ": ₱" + amount);
+					break;
+				case "Transfer Received":
+					message = "You received PHP " + amount + " from " + recipient + ".";
+					recentTransactionListModel.addElement("• Received from " + recipient + ": ₱" + amount);
+					break;
+				case "Loan Payment":
+					message = "You paid a loan of PHP " + amount + ".";
+					recentTransactionListModel.addElement("• Loan Payment: ₱" + amount);
+					break;
+				default:
+					message = "Transaction of PHP " + amount + " successful.";
+					recentTransactionListModel.addElement("• " + type + ": ₱" + amount);
+			}
+
+			addNotification(type + " Completed", message, date);
+		}
+
+		updateRecentTransactions();
+	}
+
+
 
 	public void updateTransactionTable(DefaultTableModel tableModel, Account account) {
 		java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
