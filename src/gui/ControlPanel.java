@@ -1,5 +1,6 @@
 package gui;
 import java.awt.event.*;
+import java.util.List;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -21,8 +22,17 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
+import system.Account;
 import system.Admin;
+import system.Bank;
+import system.BankLedger;
+import system.Customer;
+import system.Transaction;
+
 import javax.swing.SwingConstants;
 import java.awt.CardLayout;
 
@@ -31,13 +41,16 @@ public class ControlPanel extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private boolean reportsVisible = false;
 	private Color navBgColor = new Color(255, 255, 255);
-	private Color activeColor = new Color(0, 128, 255);
+	private Color activeColor = new Color(128, 128, 128);
 	private Color hoverColor = new Color(220, 230, 240);
 	private Color infoBgColor = new Color(240, 240, 240);
-	JPanel tablePanel;
-	JScrollPane scrollPane;
-	JTable table;
+	private JPanel tablePanel;
+	private JScrollPane scrollPane;
+	private JButton logoutBtn;
+	private JButton activeButton;
+	private JTable table;
 	private JTextField textField;
+	private JButton[] buttons;
 
 	public ControlPanel(Admin admin) {
 		setTitle("Monthly Transaction Summary");
@@ -143,7 +156,7 @@ public class ControlPanel extends JFrame {
 		});
 
 		// Logout Button (Styled like others)
-		JButton logoutBtn = new JButton("Logout");
+		logoutBtn = new JButton("Logout");
 		logoutBtn.setBackground(navBgColor);
 		logoutBtn.setFont(new Font("SansSerif", Font.BOLD, 15));
 		logoutBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -169,10 +182,40 @@ public class ControlPanel extends JFrame {
 		infoPanel.add(autofillID);
 		autofillID.setBackground(new Color(255, 255, 255));
 
+		// Mouse Hover Effect for All Buttons
+		buttons = new JButton[] {btnmanageAccount, btnmanageTransaction, reportsToggle, logoutBtn};
+		activeButton = btnmanageAccount;
+
+		for (JButton button : buttons) {
+			button.addMouseListener(new MouseAdapter() {
+				public void mouseEntered(MouseEvent e) {
+					if (button != activeButton) button.setBackground(hoverColor);
+				}
+				public void mouseExited(MouseEvent e) {
+					if (button != activeButton) button.setBackground(navBgColor);
+				}
+			});
+		}
+
+		// Example: when you open dashboard by default
+		setActiveButton(btnmanageAccount);
+		// Example: If you want to change active panel when clicking other buttons
+		btnmanageTransaction.addActionListener(e -> {
+			setActiveButton(btnmanageTransaction);
+			reportsPanel.setVisible(false);
+			reportsToggle.setText("Reports ▼");
+		});
+		reportsToggle.addActionListener(e -> setActiveButton(reportsToggle));
+
+		JPanel switchPanel = new JPanel();
+		switchPanel.setBounds(268, 0, 916, 881);
+		getContentPane().add(switchPanel);
+		switchPanel.setLayout(new CardLayout(0, 0));
+
 		//-----MANAGE ACCOUNTS-----
 		JPanel manageAccounts = new JPanel();
 		manageAccounts.setBounds(268, 0, 916, 881);
-		getContentPane().add(manageAccounts);
+		switchPanel.add(manageAccounts);
 		manageAccounts.setLayout(new CardLayout(0, 0));
 
 		JPanel manageAccounts1 = new JPanel();
@@ -194,7 +237,7 @@ public class ControlPanel extends JFrame {
 		manageAccountsheaderpanel.add(lblmanageAccounts);
 		manageAccounts1.add(manageAccountsheaderpanel, BorderLayout.NORTH);
 
-		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\Downloads\\bankicon-removebg-preview.png");
+		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bankicon-removebg-preview.png");
 		Image scaledImage = originalIcon.getImage().getScaledInstance(80, 70, Image.SCALE_SMOOTH); // width, height
 		ImageIcon resizedIcon = new ImageIcon(scaledImage);
 
@@ -207,44 +250,94 @@ public class ControlPanel extends JFrame {
 		tablePanel.setBounds(51, 223, 826, 627); // Adjust height as needed
 		tablePanel.setLayout(new BorderLayout());
 
-		String[] manageAccountsHeaders = {"ID", "Name", "Account Type"};
-		Object[][] manageAccountsData = {};
+		String[] manageAccountsHeaders = {"ID", "Name", "Email", "Contact Number", "Address", "Account Type"};
+		DefaultTableModel tableModel = new DefaultTableModel(manageAccountsHeaders, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
 
-		table = new JTable(manageAccountsData, manageAccountsHeaders);
-		table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
-		table.setFont(new Font("Arial", Font.PLAIN, 13));
-		table.setRowHeight(22);
+		table = new JTable(tableModel);
+
+		table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		table.setRowHeight(30); 
+		table.setFillsViewportHeight(true); 
+
+		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+					boolean hasFocus, int row, int column) {
+				Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+				if (!isSelected) {
+					c.setBackground(row % 2 == 0 ? new Color(245, 245, 245) : Color.WHITE); 
+				} else {
+					c.setBackground(new Color(200, 230, 255)); 
+				}
+				return c;
+			}
+		});
+
+		Bank bank = BankLedger.getInstance().getBank();
+		List<Account> customers =  bank.getAllAccounts();
+		tableModel.setRowCount(0); // Clear existing rows
+
+		for (Account account : customers) {
+			String accountNumber = account.getAccountNumber();
+			String name = account.getOwner().getName();
+			String email = account.getOwner().getEmail();
+			String contact = account.getOwner().getContactNumber();
+			String address = account.getOwner().getAddress();
+			String accountType = account.getAccountType();
+			// Add row to table
+			tableModel.addRow(new Object[]{accountNumber, name, email, contact, address, accountType});
+		}
+
+		JTableHeader header = table.getTableHeader();
+		header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+		header.setBackground(new Color(220, 220, 220));
+		header.setForeground(Color.BLACK);
+		header.setReorderingAllowed(false);
+		header.setResizingAllowed(false);
 
 		scrollPane = new JScrollPane(table);
 		tablePanel.add(scrollPane, BorderLayout.CENTER);
 		manageAccounts1.add(tablePanel);
-		
+
 		JButton btnNewButton = new JButton("Create New");
-		btnNewButton.setBounds(36, 106, 141, 56);
+		btnNewButton.setBounds(72, 106, 141, 56);
 		manageAccounts1.add(btnNewButton);
-		
+
 		JButton btnDelete = new JButton("Delete");
-		btnDelete.setBounds(431, 106, 141, 56);
+		btnDelete.setBounds(411, 106, 141, 56);
 		manageAccounts1.add(btnDelete);
-		
+
 		JButton btnEdit = new JButton("Edit");
 		btnEdit.setBounds(242, 106, 141, 56);
 		manageAccounts1.add(btnEdit);
-		
+
 		JButton btnSearch = new JButton("Search");
 		btnSearch.setBounds(765, 106, 141, 56);
 		manageAccounts1.add(btnSearch);
-		
+
 		textField = new JTextField();
 		textField.setBounds(593, 115, 164, 38);
 		manageAccounts1.add(textField);
 		textField.setColumns(10);
 
+		JButton btnRefresh = new JButton("Refresh");
+		btnRefresh.setBounds(51, 181, 89, 31);
+		manageAccounts1.add(btnRefresh);
+
+		btnRefresh.addActionListener(e -> {
+			updateTransactionTable(tableModel);
+		});
+
 
 		//-----MONTHLY TRANSACTION SUMMARY-----
 		JPanel montlyTransactionSummaryPanel = new JPanel();
 		montlyTransactionSummaryPanel.setBounds(268, 0, 916, 881);
-		getContentPane().add(montlyTransactionSummaryPanel);
+		switchPanel.add(montlyTransactionSummaryPanel);
 		montlyTransactionSummaryPanel.setLayout(new CardLayout(0, 0));
 		montlyTransactionSummaryPanel.setVisible(false);
 
@@ -273,16 +366,74 @@ public class ControlPanel extends JFrame {
 
 		// Table Panel with JTable
 		tablePanel = new JPanel();
-		tablePanel.setBounds(51, 83, 580, 200); // Adjust height as needed
+		tablePanel.setBounds(51, 83, 809, 600); // Adjust height as needed
 		tablePanel.setLayout(new BorderLayout());
 
-		String[] headers = {"Date", "ID", "Amount", "Type", "Balance"};
-		Object[][] data = {};
+		String[] monthlyTransactionHeaders = {"Date", "Name", "ID", "Amount", "Type", "Balance"};
+		DefaultTableModel tableModel1 = new DefaultTableModel(monthlyTransactionHeaders, 0) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
 
-		table = new JTable(data, headers);
-		table.getTableHeader().setFont(new Font("Arial", Font.BOLD, 14));
-		table.setFont(new Font("Arial", Font.PLAIN, 13));
-		table.setRowHeight(22);
+		table = new JTable(tableModel1);
+
+		table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		table.setRowHeight(30); 
+		table.setFillsViewportHeight(true); 
+
+		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+					boolean hasFocus, int row, int column) {
+				Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+				if (!isSelected) {
+					c.setBackground(row % 2 == 0 ? new Color(245, 245, 245) : Color.WHITE); 
+				} else {
+					c.setBackground(new Color(200, 230, 255)); 
+				}
+				return c;
+			}
+		});
+		
+		for (Account account : customers) {
+			java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
+			tableModel1.setRowCount(0); // Clear existing rows
+			
+			for (Transaction transaction : transactions) {
+				String date = transaction.getDate().toString();
+				String iD = account.getAccountNumber();
+				String type = transaction.getAction();
+				String amount = String.format("₱%.2f", transaction.getAmount());
+				double balance = account.getBalance();
+				String recipient = account.getOwner().getName();
+				
+				// Handle transfers
+				if (type.startsWith("Transfer to ")) {
+					recipient = type.substring(12); // Extract recipient from action text
+					type = "Transfer Sent";
+				} else if (type.startsWith("Transfer from ")) {
+					recipient = type.substring(14); // Extract recipient from action text
+					type = "Transfer Received";
+				}
+
+				// Add row to table
+				tableModel1.addRow(new Object[]{date, recipient, iD, amount, type, balance});
+			}
+			
+		}
+		
+		
+
+		
+
+		JTableHeader header1 = table.getTableHeader();
+		header1.setFont(new Font("Segoe UI", Font.BOLD, 14));
+		header1.setBackground(new Color(220, 220, 220));
+		header1.setForeground(Color.BLACK);
+		header1.setReorderingAllowed(false);
+		header1.setResizingAllowed(false);
 
 		scrollPane = new JScrollPane(table);
 		tablePanel.add(scrollPane, BorderLayout.CENTER);
@@ -290,33 +441,33 @@ public class ControlPanel extends JFrame {
 
 		// Transaction filter
 		JLabel dateRangeLabel = new JLabel("Date Range:");
-		dateRangeLabel.setBounds(66, 314, 100, 25);
+		dateRangeLabel.setBounds(85, 736, 100, 25);
 		montlyTransactionSummaryPanel1.add(dateRangeLabel);
 
 		String[] options = {"Select Option", "Last 7 Days", "Last 30 Days", "Last 60 Days", "Custom"};
 		JComboBox<String> dateRangeDropdown = new JComboBox<>(options);
-		dateRangeDropdown.setBounds(166, 314, 150, 25);
+		dateRangeDropdown.setBounds(185, 736, 150, 25);
 		montlyTransactionSummaryPanel1.add(dateRangeDropdown);
 
 		JLabel fromLabel = new JLabel("From:");
-		fromLabel.setBounds(66, 354, 100, 25);
+		fromLabel.setBounds(85, 776, 100, 25);
 		montlyTransactionSummaryPanel1.add(fromLabel);
 
 		JTextField fromDate = new JTextField("mm/dd/yyyy");
-		fromDate.setBounds(166, 354, 150, 25);
+		fromDate.setBounds(185, 776, 150, 25);
 		montlyTransactionSummaryPanel1.add(fromDate);
 
 		JLabel toLabel = new JLabel("To:");
-		toLabel.setBounds(66, 394, 100, 25);
+		toLabel.setBounds(85, 816, 100, 25);
 		montlyTransactionSummaryPanel1.add(toLabel);
 
 		JTextField toDate = new JTextField("mm/dd/yyyy");
-		toDate.setBounds(166, 394, 150, 25);
+		toDate.setBounds(185, 816, 150, 25);
 		montlyTransactionSummaryPanel1.add(toDate);
 
 		JButton submitBtn = new JButton("Submit");
 		submitBtn.setBackground(new Color(100, 180, 255));
-		submitBtn.setBounds(377, 389, 100, 30);
+		submitBtn.setBounds(396, 811, 100, 30);
 		montlyTransactionSummaryPanel1.add(submitBtn);
 
 		logoutBtn.addActionListener(event -> {
@@ -335,5 +486,61 @@ public class ControlPanel extends JFrame {
 			String to = toDate.getText();
 			JOptionPane.showMessageDialog(this, "Fetching transactions from " + from + " to " + to + " for range: " + range);
 		});
+
+
+		//Switching panel
+		btnmanageAccount.addMouseListener(new MouseAdapter() {
+
+			public void mouseClicked(MouseEvent e) {
+				montlyTransactionSummaryPanel.setVisible(false);
+				manageAccounts.setVisible(true);
+				setActiveButton(btnmanageAccount);
+				reportsVisible = false;
+				reportsPanel.setVisible(reportsVisible);
+				reportsToggle.setText(reportsVisible ? "Reports ▲" : "Reports ▼");
+			}
+		});
+
+		monthlyBtn.addMouseListener(new MouseAdapter() {
+
+			public void mouseClicked(MouseEvent e) {
+				montlyTransactionSummaryPanel.setVisible(true);
+				manageAccounts.setVisible(false);
+				reportsVisible = false;
+				reportsPanel.setVisible(reportsVisible);
+				reportsToggle.setText(reportsVisible ? "Reports ▲" : "Reports ▼");
+			}
+		});
+	}
+
+	public void updateTransactionTable(DefaultTableModel tableModel) {
+		Bank bank = BankLedger.getInstance().getBank();
+		List<Account> customers =  bank.getAllAccounts();
+		tableModel.setRowCount(0); // Clear existing rows
+
+		for (Account account : customers) {
+			String accountNumber = account.getAccountNumber();
+			String name = account.getOwner().getName();
+			String email = account.getOwner().getEmail();
+			String contact = account.getOwner().getContactNumber();
+			String address = account.getOwner().getAddress();
+			String accountType = account.getAccountType();
+			// Add row to table
+			tableModel.addRow(new Object[]{accountNumber, name, email, contact, address, accountType});
+
+		}
+	}
+
+	private void setActiveButton(JButton selectedButton) {
+		for (JButton button : buttons) {
+			if (button == selectedButton) {
+				button.setBackground(activeColor);
+				button.setForeground(Color.WHITE);
+			} else if (button != logoutBtn) { 
+				button.setBackground(navBgColor);
+				button.setForeground(Color.BLACK);
+			}
+		}
+		activeButton = selectedButton;
 	}
 }

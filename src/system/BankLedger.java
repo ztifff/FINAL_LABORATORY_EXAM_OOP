@@ -84,4 +84,13 @@ public class BankLedger {
         }
         return null; // Not found
     }
+    
+    public Account findAccountByName(String Name) {
+        for (Account acc : accounts) {
+            if (acc.getOwner().getName().equals(Name)) {
+                return acc;
+            }
+        }
+        return null; // Not found
+    }
 }

@@ -12,7 +12,6 @@ public class Account {
     private String accountType;
     private TransactionHistory history;
     private Customer owner;
-    private Admin admin;
     private Bank bank;
 
     public Account(Customer owner, String accountType, Bank bank) {
@@ -28,17 +27,9 @@ public class Account {
         return bank;
     }
     
-    public Account(Admin admin) {
-    	this.admin = admin;
-	}
-    
     public Customer getOwner() {
         return owner;
     }
-    
-    public Admin getAdmin() {
-		return admin;
-	}
 
 	public String getAccountNumber() {
         return accountNumber;
@@ -60,7 +51,6 @@ public class Account {
         if (amount > 0) {
             balance += amount;
             history.addTransaction(new Transaction("Deposit", amount, LocalDate.now()));
-            
             return true;
         }
         return false;

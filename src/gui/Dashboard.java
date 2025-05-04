@@ -32,6 +32,7 @@ public class Dashboard extends JFrame {
 	private JButton[] buttons;
 	private DefaultListModel<String> recentTransactionListModel;
 	private JPanel notificationContentPanel;
+	private String notification;
 
 
 
@@ -232,7 +233,7 @@ public class Dashboard extends JFrame {
 		dashboardheaderpanel.add(lblNewLabel);
 		dashboardpanel2.add(dashboardheaderpanel, BorderLayout.NORTH);
 
-		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\Downloads\\bankicon-removebg-preview.png");
+		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bankicon-removebg-preview.png");
 		Image scaledImage = originalIcon.getImage().getScaledInstance(80, 70, Image.SCALE_SMOOTH); // width, height
 		ImageIcon resizedIcon = new ImageIcon(scaledImage);
 
@@ -559,13 +560,36 @@ public class Dashboard extends JFrame {
 		        return c;
 		    }
 		});
+		
+		java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
+		tableModel.setRowCount(0); // Clear existing rows
+
+		for (Transaction transaction : transactions) {
+			String date = transaction.getDate().toString();
+			String type = transaction.getAction();
+			String amount = String.format("₱%.2f", transaction.getAmount());
+			String recipient = account.getOwner().getName(); // Default recipient
+
+			// Handle transfers
+			if (type.startsWith("Transfer to ")) {
+				recipient = type.substring(12); // Extract recipient from action text
+				type = "Transfer Sent";
+			} else if (type.startsWith("Transfer from ")) {
+				recipient = type.substring(14); // Extract recipient from action text
+				type = "Transfer Received";
+			}
+
+			// Add row to table
+			tableModel.addRow(new Object[]{date, type, amount, recipient});
+		}
 
 		// Table header styling
 		JTableHeader header = transactionTable.getTableHeader();
 		header.setFont(new Font("Segoe UI", Font.BOLD, 14));
 		header.setBackground(new Color(220, 220, 220));
 		header.setForeground(Color.BLACK);
-		header.setReorderingAllowed(false); // Optional: disable column drag
+		header.setReorderingAllowed(false); 
+		header.setResizingAllowed(false);
 
 		// Scrollable Table
 		JScrollPane scrollPane = new JScrollPane(transactionTable);
@@ -735,8 +759,6 @@ public class Dashboard extends JFrame {
 		notificationPanel1.add(notificationScrollPane, BorderLayout.CENTER);
 
 
-
-
 		//Switching panel
 		btnNotification.addMouseListener(new MouseAdapter() {
 
@@ -795,6 +817,7 @@ public class Dashboard extends JFrame {
 
 		// ========== SUBMIT LOGIC (Sample) ==========
 		btnSubmitTransaction.addActionListener(e -> {
+			String recipientAccountName = null;
 			String selectedAccountType = lblAccountTypeValue.getText().toString();
 			String transaction = "";
 			if (cbDeposit.isSelected()) transaction = "Deposit";
@@ -840,7 +863,7 @@ public class Dashboard extends JFrame {
 				} 
 				else if (cbTransfer.isSelected()) {
 					String recipientAccountNumber = txtRecipientAccount.getText().trim();
-					String recipientAccountName = txtRecipientName.getText().trim();
+					recipientAccountName = txtRecipientName.getText().trim();
 
 					if (recipientAccountNumber.isEmpty() || recipientAccountName.isEmpty()) {
 						JOptionPane.showMessageDialog(this, "Please enter complete recipient information.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -870,10 +893,12 @@ public class Dashboard extends JFrame {
 			} 
 
 			else if (selectedAccountType.equals("Loan")) {
+				if (cbDeposit.isSelected()) transaction = "Deposit";
+				else if (cbWithdraw.isSelected()) transaction = "Borrow";
+				else if (cbTransfer.isSelected()) transaction = "Repay Loan";
 				if (cbDeposit.isSelected()) {
 					if (account instanceof LoanAccount) {
 						transactionSuccess = ((LoanAccount) account).deposit(amount);
-						transactionType = "Loan Payment";
 					} 
 				} else {
 					JOptionPane.showMessageDialog(this, "Only deposits (payments) are allowed for Loan accounts.", 
@@ -918,13 +943,16 @@ public class Dashboard extends JFrame {
 				}
 
 				// Update Notifications and Recent Transactions
-				java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
+				java.util.List<Transaction> transactions1 = account.getHistory().getHistoryList();
 				String date = null;
-				for (Transaction transaction1 : transactions) {
+				for (Transaction transaction1 : transactions1) {
 					date = transaction1.getDate().toString();
 				}
+				bankLedger = BankLedger.getInstance();
+
+				Account recipientAccount = bankLedger.findAccountByName(recipientAccountName);
 				if (transactionType.equals("Transferred")) {
-					addNotification("Transfer Completed", "You transferred PHP " + amount + ".", date);
+					addNotification("Transfer Completed", "You transferred PHP " + amount + " to " + recipientAccount.getOwner().getName() + ".", date);
 
 					recentTransactionListModel.addElement("• Transferred: ₱" + amount);
 				} 
