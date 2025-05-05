@@ -59,4 +59,9 @@ public class LoanAccount extends Account {
 		return true;
 	}
 
+	@Override
+	public String getAccountType() {
+		return "Loan";
+	}
+
 }

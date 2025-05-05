@@ -8,9 +8,14 @@ import system.Bank;
 import system.BankLedger;
 import system.Customer;
 import system.LoanAccount;
+import system.LowBalanceNotifier;
+import system.Notification;
+import system.Transaction;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.Date;
 
 public class RegisterForm extends JFrame {
@@ -327,11 +332,35 @@ public class RegisterForm extends JFrame {
 		                Account newAccount = AccountFactory.createAccount(accountType, existing);
 		                bank.addAccount(newAccount);
 		                existing.addAccount(newAccount); 
+		                
+		             // Register LowBalanceNotifier as an observer for the new account
+		                LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
+		                newAccount.addObserver(lowBalanceNotifier);
 
+		                LocalDate currentDate = LocalDate.now();
 		                if (loanButton.isSelected()) {
-		                    ((LoanAccount) newAccount).borrow(deposit);
+		                    ((LoanAccount) newAccount).borrow(deposit);  // Handle loan-specific deposit (loan disbursement)
+		                    // Add initial loan transaction and notification
+		                    Transaction loanInitial = new Transaction("Loan Disbursement", deposit, currentDate);
+		                    newAccount.getHistory().addTransaction(loanInitial);
+		                    Notification loanNotification = new Notification(
+		                        "Loan Granted", 
+		                        "You borrowed PHP " + deposit + " as your starting loan.", 
+		                        loanInitial.getDate().toString()
+		                    );
+		                    newAccount.addNotification(loanNotification);
+
 		                } else {
-		                    newAccount.deposit(deposit);
+		                    newAccount.deposit(deposit);  // Handle deposit for savings/checking
+		                    // Add initial deposit transaction and notification
+		                    Transaction initialDeposit = new Transaction("Initial Deposit", deposit, currentDate);
+		                    newAccount.getHistory().addTransaction(initialDeposit);
+		                    Notification initialDepositNotification = new Notification(
+		                        "Initial Deposit Completed", 
+		                        "You deposited PHP " + deposit + " as initial deposit.", 
+		                        initialDeposit.getDate().toString()
+		                    );
+		                    newAccount.addNotification(initialDepositNotification);
 		                }
 
 		                JOptionPane.showMessageDialog(null, "New account created successfully!\nYour Account Number: " + newAccount.getAccountNumber());
@@ -354,11 +383,37 @@ public class RegisterForm extends JFrame {
 			BankLedger.getInstance().addAccount(account);
 			customer.addAccount(account);
 			
+			// Register LowBalanceNotifier as an observer for the new account
+			LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
+			account.addObserver(lowBalanceNotifier);
+			
+			 LocalDate currentDate = LocalDate.now();
+			
 			if (loanButton.isSelected()) {
-				((LoanAccount) account).borrow(deposit);
+			    ((LoanAccount) account).borrow(deposit);  // Handle loan-specific deposit (loan disbursement)
+			    // Add initial loan transaction and notification
+			    Transaction loanInitial = new Transaction("Loan Disbursement", deposit, currentDate);
+			    account.getHistory().addTransaction(loanInitial);
+			    Notification loanNotification = new Notification(
+			        "Loan Granted", 
+			        "You borrowed PHP " + deposit + " as your starting loan.", 
+			        loanInitial.getDate().toString()
+			    );
+			    account.addNotification(loanNotification);
+
 			} else {
-				account.deposit(deposit);
+			    account.deposit(deposit);  // Handle deposit for savings/checking
+			    // Add initial deposit transaction and notification
+			    Transaction initialDeposit = new Transaction("Initial Deposit", deposit, currentDate);
+			    account.getHistory().addTransaction(initialDeposit);
+			    Notification initialDepositNotification = new Notification(
+			        "Initial Deposit Completed", 
+			        "You deposited PHP " + deposit + " as initial deposit.", 
+			        initialDeposit.getDate().toString()
+			    );
+			    account.addNotification(initialDepositNotification);
 			}
+
 
 			JOptionPane.showMessageDialog(this, "Account created successfully!\nYour Account Number: " + account.getAccountNumber());
 			dispose();

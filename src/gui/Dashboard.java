@@ -8,6 +8,7 @@ import system.BankLedger;
 import system.CheckingAccount;
 import system.LoanAccount;
 import system.LowBalanceNotifier;
+import system.Notification;
 import system.Transaction;
 
 import java.awt.*;
@@ -196,13 +197,13 @@ public class Dashboard extends JFrame {
 		// LOGOUT BUTTON BEHAVIOR
 		btnLogout.addActionListener(e -> {
 			int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Confirm", JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-    			dispose();
-    			Login login = new Login();
-    			login.setVisible(true);
-    			login.setLocationRelativeTo(null);
-            }
-        });
+			if (confirm == JOptionPane.YES_OPTION) {
+				dispose();
+				Login login = new Login();
+				login.setVisible(true);
+				login.setLocationRelativeTo(null);
+			}
+		});
 
 
 		JPanel switchpanel = new JPanel();
@@ -319,7 +320,7 @@ public class Dashboard extends JFrame {
 
 		balancepanel.add(balanceheaderpanel, BorderLayout.CENTER);
 
-		
+
 
 
 		// TRANSACTION PANEL SETUP
@@ -414,11 +415,11 @@ public class Dashboard extends JFrame {
 		cbTransfer.setFont(new Font("Roboto", Font.PLAIN, 16));
 
 		if (accountType.equalsIgnoreCase("Loan")) {
-		    cbDeposit = new JCheckBox("Repay Loan");  // Deposit for Loan
-		    cbWithdraw = new JCheckBox("Borrow");     // Withdraw for Loan
+			cbDeposit = new JCheckBox("Repay Loan");  // Deposit for Loan
+			cbWithdraw = new JCheckBox("Borrow");     // Withdraw for Loan
 		} else {
-		    cbDeposit = new JCheckBox("Deposit");
-		    cbWithdraw = new JCheckBox("Withdraw");
+			cbDeposit = new JCheckBox("Deposit");
+			cbWithdraw = new JCheckBox("Withdraw");
 		}
 
 		cbDeposit.setFont(new Font("Roboto", Font.PLAIN, 16));
@@ -545,14 +546,14 @@ public class Dashboard extends JFrame {
 		// Table Setup
 		String[] columnNames = { "Date", "Type", "Amount", "Recipient" };
 		DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
-		    @Override
-		    public boolean isCellEditable(int row, int column) {
-		        return false;
-		    }
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
 		};
 
 		JTable transactionTable = new JTable(tableModel);
-		
+
 		// --- Styling the JTable ---
 		transactionTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 		transactionTable.setRowHeight(30); 
@@ -560,19 +561,19 @@ public class Dashboard extends JFrame {
 
 		// Alternate row color
 		transactionTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
-		    @Override
-		    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-		                                                   boolean hasFocus, int row, int column) {
-		        Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-		        if (!isSelected) {
-		            c.setBackground(row % 2 == 0 ? new Color(245, 245, 245) : Color.WHITE); 
-		        } else {
-		            c.setBackground(new Color(200, 230, 255)); 
-		        }
-		        return c;
-		    }
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+					boolean hasFocus, int row, int column) {
+				Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+				if (!isSelected) {
+					c.setBackground(row % 2 == 0 ? new Color(245, 245, 245) : Color.WHITE); 
+				} else {
+					c.setBackground(new Color(200, 230, 255)); 
+				}
+				return c;
+			}
 		});
-		
+
 		java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
 		tableModel.setRowCount(0); // Clear existing rows
 
@@ -723,12 +724,12 @@ public class Dashboard extends JFrame {
 		lblAccountBalanceView.setHorizontalAlignment(SwingConstants.CENTER);
 
 		if (account instanceof LoanAccount) {
-		    lblAccountBalanceInfo.setText("Loan Balance:");
-		    double loanBalance = ((LoanAccount) account).getLoanBalance();
-		    lblAccountBalanceView.setText(String.format("₱%,.2f", loanBalance));
+			lblAccountBalanceInfo.setText("Loan Balance:");
+			double loanBalance = ((LoanAccount) account).getLoanBalance();
+			lblAccountBalanceView.setText(String.format("₱%,.2f", loanBalance));
 		} else {
-		    lblAccountBalanceInfo.setText("Balance:");
-		    lblAccountBalanceView.setText(String.format("₱%,.2f", account.getBalance()));
+			lblAccountBalanceInfo.setText("Balance:");
+			lblAccountBalanceView.setText(String.format("₱%,.2f", account.getBalance()));
 		}
 
 
@@ -772,9 +773,9 @@ public class Dashboard extends JFrame {
 		notificationContentPanel = new JPanel();
 		notificationContentPanel.setLayout(new BoxLayout(notificationContentPanel, BoxLayout.Y_AXIS));
 		notificationContentPanel.setBackground(new Color(245, 245, 245));
-		loadUserNotifications(account);
-		
-		
+		refreshNotifications(account);
+
+
 
 		// Scroll pane wrapping the content
 		JScrollPane notificationScrollPane = new JScrollPane(notificationContentPanel);
@@ -838,7 +839,6 @@ public class Dashboard extends JFrame {
 				notificationPanel.setVisible(false);
 			}
 		});
-
 
 		// ========== SUBMIT LOGIC (Sample) ==========
 		btnSubmitTransaction.addActionListener(e -> {
@@ -918,21 +918,21 @@ public class Dashboard extends JFrame {
 			} 
 
 			else if (selectedAccountType.equals("Loan")) {
-			    if (cbDeposit.isSelected()) {
-			        if (account instanceof LoanAccount) {
-			            transactionSuccess = ((LoanAccount) account).repayLoan(amount);
-			            transactionType = "Loan Payment";
-			        }
-			    } else if (cbWithdraw.isSelected()) {
-			        if (account instanceof LoanAccount) {
-			            transactionSuccess = ((LoanAccount) account).borrow(amount);
-			            transactionType = "Borrowed";
-			        }
-			    } else {
-			        JOptionPane.showMessageDialog(this, "Only Borrow or Repay Loan are allowed for Loan accounts.", 
-			            "Error", JOptionPane.ERROR_MESSAGE);
-			        return;
-			    }
+				if (cbDeposit.isSelected()) {
+					if (account instanceof LoanAccount) {
+						transactionSuccess = ((LoanAccount) account).repayLoan(amount);
+						transactionType = "Loan Payment";
+					}
+				} else if (cbWithdraw.isSelected()) {
+					if (account instanceof LoanAccount) {
+						transactionSuccess = ((LoanAccount) account).borrow(amount);
+						transactionType = "Borrowed";
+					}
+				} else {
+					JOptionPane.showMessageDialog(this, "Only Borrow or Repay Loan are allowed for Loan accounts.", 
+							"Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 			}
 
 
@@ -944,10 +944,6 @@ public class Dashboard extends JFrame {
 			if (transactionSuccess) {
 				lblbalance1.setText("Balance: ₱" + String.format("%.2f", account.getBalance()));
 				lblAccountBalanceView.setText(String.format("%.2f", account.getBalance()));
-
-
-
-				LowBalanceNotifier.checkAndNotify(account);
 
 				if (account instanceof LoanAccount) {
 					LoanAccount loanAccount = (LoanAccount) account;
@@ -981,28 +977,53 @@ public class Dashboard extends JFrame {
 				java.util.List<Transaction> transactions1 = account.getHistory().getHistoryList();
 				String date = null;
 				for (Transaction transaction1 : transactions1) {
-					date = transaction1.getDate().toString();
+					date = transaction1.getDate().toString();  // Last transaction date
 				}
+
 				bankLedger = BankLedger.getInstance();
-
 				Account recipientAccount = bankLedger.findAccountByName(recipientAccountName);
-				if (transactionType.equals("Transferred")) {
-					addNotification("Transfer Completed", "You transferred PHP " + amount + " to " + recipientAccount.getOwner().getName() + ".", date);
 
+				if (transactionType.equals("Transferred")) {
+					Notification transferNotification = new Notification(
+							"Transfer Completed", 
+							"You transferred PHP " + amount + " to " + recipientAccount.getOwner().getName() + ".", 
+							date
+							);
+					account.addNotification(transferNotification);  
+					Notification receivedNotification = new Notification(
+							"Money Received", 
+							"You received PHP " + amount + " from " + account.getOwner().getName() + ".", 
+							date
+							);
+					recipientAccount.addNotification(receivedNotification);
+					refreshNotifications(account);
 					recentTransactionListModel.addElement("• Transferred: ₱" + amount);
 				} 
 				else if (transactionType.equals("Loan Payment")) {
-					addNotification("Loan Payment", "You paid a loan of PHP " + amount + ".", date);
-
+					Notification loanPaymentNotification = new Notification(
+							"Loan Payment", 
+							"You paid a loan of PHP " + amount + ".", 
+							date
+							);
+					account.addNotification(loanPaymentNotification);  
+					refreshNotifications(account);
 					recentTransactionListModel.addElement("• Loan Payment: ₱" + amount);
 				} 
 				else {
-					 addNotification(transactionType + " Completed", "Transaction of PHP " + amount + " successful.", date);
+					Notification genericNotification = new Notification(
+							transactionType + " Completed", 
+							"Transaction of PHP " + amount + " successful.", 
+							date
+							);
+					account.addNotification(genericNotification);  
+					refreshNotifications(account);
 					recentTransactionListModel.addElement("• " + transactionType + ": ₱" + amount);
 				}
 
+
 				updateRecentTransactions();
-			} 
+
+			}
 
 			else {
 				JOptionPane.showMessageDialog(this, "Transaction failed.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -1010,55 +1031,17 @@ public class Dashboard extends JFrame {
 
 		});
 
-		
+
 
 
 	}
-	public void loadUserNotifications(Account account) {
-		java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
 
-		for (Transaction transaction : transactions) {
-			String rawType = transaction.getAction(); // e.g. "Transfer to Juan"
-			String recipient = "";
-			String type = rawType;
-			double amount = transaction.getAmount();
-			String date = transaction.getDate().toString();
-
-			// Handle transfers
-			if (rawType.startsWith("Transfer to ")) {
-				recipient = rawType.substring(12); // Extract recipient name
-				type = "Transfer Sent";
-			} else if (rawType.startsWith("Transfer from ")) {
-				recipient = rawType.substring(14); // Extract sender name
-				type = "Transfer Received";
-			}
-
-			String message;
-
-			switch (type) {
-				case "Transfer Sent":
-					message = "You transferred PHP " + amount + " to " + recipient + ".";
-					recentTransactionListModel.addElement("• Transferred to " + recipient + ": ₱" + amount);
-					break;
-				case "Transfer Received":
-					message = "You received PHP " + amount + " from " + recipient + ".";
-					recentTransactionListModel.addElement("• Received from " + recipient + ": ₱" + amount);
-					break;
-				case "Loan Payment":
-					message = "You paid a loan of PHP " + amount + ".";
-					recentTransactionListModel.addElement("• Loan Payment: ₱" + amount);
-					break;
-				default:
-					message = "Transaction of PHP " + amount + " successful.";
-					recentTransactionListModel.addElement("• " + type + ": ₱" + amount);
-			}
-
-			addNotification(type + " Completed", message, date);
-		}
-
-		updateRecentTransactions();
+	public void refreshNotifications(Account account) {
+		notificationContentPanel.removeAll();
+		notificationContentPanel.revalidate();
+		notificationContentPanel.repaint();
+		displayNotifications(account);
 	}
-
 
 
 	public void updateTransactionTable(DefaultTableModel tableModel, Account account) {
@@ -1105,42 +1088,51 @@ public class Dashboard extends JFrame {
 	}
 
 	// --- ADD NOTIFICATION METHOD ---
-	public void addNotification(String title, String message, String date) {
-	    JPanel notificationItemPanel = new JPanel(new BorderLayout());
-	    notificationItemPanel.setBackground(Color.WHITE);
-	    notificationItemPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-	    notificationItemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
+	public void addNotification(Notification notification) {
+		JPanel notificationItemPanel = new JPanel(new BorderLayout());
+		notificationItemPanel.setBackground(Color.WHITE);
+		notificationItemPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
+		notificationItemPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
 
-	    // Text area
-	    JPanel textPanel = new JPanel();
-	    textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-	    textPanel.setBackground(Color.WHITE);
+		// Text area
+		JPanel textPanel = new JPanel();
+		textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
+		textPanel.setBackground(Color.WHITE);
 
-	    JLabel titleLabel = new JLabel("• " + title);
-	    titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
-	    titleLabel.setForeground(Color.BLACK);
+		JLabel titleLabel = new JLabel("• " + notification.getTitle());
+		titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+		titleLabel.setForeground(Color.BLACK);
 
-	    JLabel messageLabel = new JLabel(message);
-	    messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-	    messageLabel.setForeground(Color.DARK_GRAY);
+		JLabel messageLabel = new JLabel(notification.getMessage());
+		messageLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+		messageLabel.setForeground(Color.DARK_GRAY);
 
-	    textPanel.add(titleLabel);
-	    textPanel.add(messageLabel);
+		textPanel.add(titleLabel);
+		textPanel.add(messageLabel);
 
-	    // Date label
-	    JLabel dateLabel = new JLabel(date);
-	    dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-	    dateLabel.setForeground(Color.GRAY);
-	    dateLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+		// Date label
+		JLabel dateLabel = new JLabel(notification.getDate());
+		dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+		dateLabel.setForeground(Color.GRAY);
+		dateLabel.setHorizontalAlignment(SwingConstants.RIGHT);
 
-	    notificationItemPanel.add(textPanel, BorderLayout.CENTER);
-	    notificationItemPanel.add(dateLabel, BorderLayout.EAST);
+		notificationItemPanel.add(textPanel, BorderLayout.CENTER);
+		notificationItemPanel.add(dateLabel, BorderLayout.EAST);
 
-	    // Add to main list
-	    notificationContentPanel.add(notificationItemPanel);
-	    notificationContentPanel.revalidate();
-	    notificationContentPanel.repaint();
+		// Add to main list
+		notificationContentPanel.add(notificationItemPanel);
+		notificationContentPanel.revalidate();
+		notificationContentPanel.repaint();
 	}
+
+
+	public void displayNotifications(Account account) {
+		for (Notification notif : account.getNotifications()) {
+			addNotification(notif);
+		}
+	}
+
+
 
 
 }

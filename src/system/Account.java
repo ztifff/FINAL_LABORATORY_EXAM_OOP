@@ -1,15 +1,19 @@
 package system;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javax.swing.JOptionPane;
 
 import java.time.LocalDate;
 
-public class Account {
+public class Account implements AccountSubject {
     private String accountNumber;
     private double balance;
     private String accountType;
+    private List<AccountObserver> observers = new ArrayList<>();
+    private List<Notification> notifications = new ArrayList<>();
     private TransactionHistory history;
     private Customer owner;
     private Bank bank;
@@ -22,7 +26,7 @@ public class Account {
         this.accountType = accountType; 
         this.bank = bank;
     }
-    
+
     public Bank getBank() {
         return bank;
     }
@@ -31,11 +35,11 @@ public class Account {
         return owner;
     }
 
-	public String getAccountNumber() {
+    public String getAccountNumber() {
         return accountNumber;
     }
-	
-	public String getAccountType() {
+    
+    public String getAccountType() {
         return accountType;
     }
 
@@ -51,6 +55,7 @@ public class Account {
         if (amount > 0) {
             balance += amount;
             history.addTransaction(new Transaction("Deposit", amount, LocalDate.now()));
+            notifyObservers();  // Notify observers when balance changes
             return true;
         }
         return false;
@@ -60,6 +65,7 @@ public class Account {
         if (amount > 0 && amount <= balance) {
             balance -= amount;
             history.addTransaction(new Transaction("Withdraw", amount, LocalDate.now()));
+            notifyObservers();  // Notify observers when balance changes
             return true;
         }
         return false;
@@ -81,7 +87,34 @@ public class Account {
 
         history.addTransaction(new Transaction("Transfer to " + recipient.getOwner().getName(), amount, LocalDate.now()));
         recipient.getHistory().addTransaction(new Transaction("Transfer from " + this.getOwner().getName(), amount, LocalDate.now()));
+
+        notifyObservers();  // Notify observers when balance changes
         return true;
     }
 
+    // Observer Methods (AccountSubject Interface Implementation)
+    @Override
+    public void addObserver(AccountObserver observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(AccountObserver observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers() {
+        for (AccountObserver observer : observers) {
+            observer.update(this);
+        }
+    }
+    
+    public void addNotification(Notification notification) {
+        notifications.add(notification);
+    }
+
+    public List<Notification> getNotifications() {
+        return notifications;
+    }
 }
