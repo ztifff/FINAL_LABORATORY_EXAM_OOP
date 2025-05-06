@@ -1,5 +1,6 @@
 package gui;
 import java.awt.event.*;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -19,6 +20,7 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.SystemColor;
+import java.awt.Toolkit;
 
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -28,6 +30,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
@@ -43,16 +46,24 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
 import system.Account;
+import system.AccountFactory;
 import system.Admin;
 import system.Bank;
 import system.BankLedger;
+import system.CheckingAccount;
 import system.Customer;
 import system.LoanAccount;
+import system.LowBalanceNotifier;
+import system.Notification;
 import system.ReportGenerator;
+import system.SavingsAccount;
 import system.Transaction;
 
 import javax.swing.SwingConstants;
 import java.awt.CardLayout;
+import javax.swing.JLayeredPane;
+import javax.swing.JInternalFrame;
+import javax.swing.JDesktopPane;
 
 public class ControlPanel extends JFrame {
 
@@ -61,7 +72,6 @@ public class ControlPanel extends JFrame {
 	private Color navBgColor = new Color(255, 255, 255);
 	private Color activeColor = new Color(128, 128, 128);
 	private Color hoverColor = new Color(220, 230, 240);
-	private Color infoBgColor = new Color(240, 240, 240);
 	private JPanel tablePanel;
 	private JScrollPane scrollPane;
 	private JButton logoutBtn;
@@ -71,8 +81,9 @@ public class ControlPanel extends JFrame {
 	private JButton[] buttons;
 
 	public ControlPanel(Admin admin) {
+		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
 		setTitle("Monthly Transaction Summary");
-		setSize(1200, 920);
+		setSize(1200, 831);
 		getContentPane().setLayout(null);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setBackground(Color.WHITE);
@@ -182,11 +193,11 @@ public class ControlPanel extends JFrame {
 		logoutBtn.setBorderPainted(false);
 		logoutBtn.setContentAreaFilled(true);
 		logoutBtn.setOpaque(true);
-		logoutBtn.setBounds(0, 785, 269, 85);
+		logoutBtn.setBounds(0, 700, 269, 85);
 		sidebar.add(logoutBtn);
 
 		JPanel infoPanel = new JPanel();
-		infoPanel.setBounds(0, 689, 269, 85);
+		infoPanel.setBounds(0, 604, 269, 85);
 		sidebar.add(infoPanel);
 		infoPanel.setLayout(new GridLayout(2, 1, 0, 0));
 
@@ -265,7 +276,7 @@ public class ControlPanel extends JFrame {
 
 		// Table Panel with JTable
 		tablePanel = new JPanel();
-		tablePanel.setBounds(51, 223, 826, 627); // Adjust height as needed
+		tablePanel.setBounds(51, 223, 826, 508); // Adjust height as needed
 		tablePanel.setLayout(new BorderLayout());
 
 		String[] manageAccountsHeaders = {"ID", "Name", "Email", "Contact Number", "Address", "Account Type", "Generate Report"};
@@ -398,13 +409,11 @@ public class ControlPanel extends JFrame {
 
 			@Override
 			public void addCellEditorListener(CellEditorListener l) {
-				// TODO Auto-generated method stub
 
 			}
 
 			@Override
 			public void removeCellEditorListener(CellEditorListener l) {
-				// TODO Auto-generated method stub
 
 			}
 		});
@@ -451,6 +460,9 @@ public class ControlPanel extends JFrame {
 		btnNewButton.setBackground(new Color(40, 167, 69)); // Green
 		btnNewButton.setForeground(Color.WHITE);
 		manageAccounts1.add(btnNewButton);
+		
+		btnNewButton.addActionListener(e -> openCreateAccountDialog(tableModel));
+
 
 		JButton btnEdit = new JButton("✏️ Edit");
 		btnEdit.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
@@ -524,7 +536,7 @@ public class ControlPanel extends JFrame {
 
 		// Table Panel with JTable
 		tablePanel = new JPanel();
-		tablePanel.setBounds(50, 100, 816, 580); // Adjust height as needed
+		tablePanel.setBounds(50, 100, 816, 479); // Adjust height as needed
 		tablePanel.setLayout(new BorderLayout());
 
 		String[] monthlyTransactionHeaders = {"Date", "Name", "ID", "Amount", "Type", "Balance"};
@@ -612,13 +624,13 @@ public class ControlPanel extends JFrame {
 
 		// Transaction filter
 		JLabel dateRangeLabel = new JLabel("📆 Date Range:");
-		dateRangeLabel.setBounds(50, 700, 120, 30);
+		dateRangeLabel.setBounds(50, 628, 120, 30);
 		dateRangeLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
 		montlyTransactionSummaryPanel1.add(dateRangeLabel);
 
 		String[] options = {"Select Option", "Last 7 Days", "Last 30 Days", "Last 60 Days", "Custom"};
 		JComboBox<String> dateRangeDropdown = new JComboBox<>(options);
-		dateRangeDropdown.setBounds(180, 700, 180, 30);
+		dateRangeDropdown.setBounds(180, 628, 180, 30);
 		dateRangeDropdown.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
 		montlyTransactionSummaryPanel1.add(dateRangeDropdown);
 
@@ -632,7 +644,7 @@ public class ControlPanel extends JFrame {
 		rowFromDate.add(fromLabel);
 		rowFromDate.add(fromDateSpinner);
 		montlyTransactionSummaryPanel1.add(rowFromDate);
-		rowFromDate.setBounds(50, 740, 350, 35);
+		rowFromDate.setBounds(50, 668, 350, 35);
 		fromLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
 		montlyTransactionSummaryPanel1.add(rowFromDate);
 
@@ -646,7 +658,7 @@ public class ControlPanel extends JFrame {
 		rowToDate.add(toLabel);
 		rowToDate.add(toDateSpinner);
 		montlyTransactionSummaryPanel1.add(rowToDate);
-		rowToDate.setBounds(50, 780, 350, 35);
+		rowToDate.setBounds(50, 708, 350, 35);
 		toLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
 		montlyTransactionSummaryPanel1.add(rowToDate);
 
@@ -654,7 +666,7 @@ public class ControlPanel extends JFrame {
 		// Account selection dropdown
 		JLabel accountLabel = new JLabel();
 		accountLabel.setText("👤 Select Account:");
-		accountLabel.setBounds(450, 700, 140, 30);
+		accountLabel.setBounds(450, 628, 140, 30);
 		accountLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
 		montlyTransactionSummaryPanel1.add(accountLabel);
 
@@ -663,7 +675,7 @@ public class ControlPanel extends JFrame {
 		for (Account account : customers) {
 			accountDropdown.addItem(account.getOwner().getName()); // You can add more identifiers like account number if needed
 		}
-		accountDropdown.setBounds(590, 700, 220, 30);
+		accountDropdown.setBounds(590, 628, 220, 30);
 		accountDropdown.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
 		montlyTransactionSummaryPanel1.add(accountDropdown);
 
@@ -673,7 +685,7 @@ public class ControlPanel extends JFrame {
 		submitBtn.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
 		submitBtn.setBackground(new Color(40, 167, 69)); // Green
 		submitBtn.setForeground(Color.WHITE);
-		submitBtn.setBounds(590, 780, 220, 40);
+		submitBtn.setBounds(590, 708, 220, 40);
 		montlyTransactionSummaryPanel1.add(submitBtn);
 
 		// Button Action Listener
@@ -871,7 +883,7 @@ public class ControlPanel extends JFrame {
 
 		// ScrollPane for table
 		JScrollPane scrollPane = new JScrollPane(table);
-		scrollPane.setBounds(24, 170, 847, 620);
+		scrollPane.setBounds(24, 170, 847, 556);
 		dailyTransactionReport1.add(scrollPane);
 
         
@@ -908,7 +920,7 @@ public class ControlPanel extends JFrame {
 
         // Table Panel
         JPanel tablePanel = new JPanel();
-        tablePanel.setBounds(51, 161, 809, 574);
+        tablePanel.setBounds(51, 161, 809, 455);
         tablePanel.setLayout(new BorderLayout());
 
         String[] headers = {"Date", "ID", "Account Name", "Amount", "Status"};
@@ -987,11 +999,11 @@ public class ControlPanel extends JFrame {
         // --- Redesigned Sort Section and Type Filters ---
         JLabel lblSortBy1 = new JLabel("Sort By:");
         lblSortBy1.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        lblSortBy1.setBounds(50, 746, 100, 25);
+        lblSortBy1.setBounds(51, 645, 100, 25);
         manageTransactionPanel1.add(lblSortBy1);
 
         JComboBox<String> sortDropdown1 = new JComboBox<>(new String[]{"Select Option", "Date", "Amount", "Name"});
-        sortDropdown1.setBounds(120, 746, 160, 30);
+        sortDropdown1.setBounds(121, 645, 160, 30);
         sortDropdown1.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         manageTransactionPanel1.add(sortDropdown1);
 
@@ -999,27 +1011,27 @@ public class ControlPanel extends JFrame {
         depositBtn1.setFont(new Font("Segoe UI", Font.BOLD, 13));
         depositBtn1.setForeground(Color.WHITE);
         depositBtn1.setBackground(new Color(0, 123, 255));
-        depositBtn1.setBounds(310, 746, 110, 30);
+        depositBtn1.setBounds(311, 645, 110, 30);
         manageTransactionPanel1.add(depositBtn1);
 
         JButton withdrawalBtn1 = new JButton("Withdrawals");
         withdrawalBtn1.setFont(new Font("Segoe UI", Font.BOLD, 13));
         withdrawalBtn1.setForeground(Color.WHITE);
         withdrawalBtn1.setBackground(new Color(0, 123, 255));
-        withdrawalBtn1.setBounds(430, 746, 120, 30);
+        withdrawalBtn1.setBounds(431, 645, 120, 30);
         manageTransactionPanel1.add(withdrawalBtn1);
 
         JButton transferBtn1 = new JButton("Transfers");
         transferBtn1.setFont(new Font("Segoe UI", Font.BOLD, 13));
         transferBtn1.setForeground(Color.WHITE);
         transferBtn1.setBackground(new Color(0, 123, 255));
-        transferBtn1.setBounds(560, 746, 110, 30);
+        transferBtn1.setBounds(561, 645, 110, 30);
         manageTransactionPanel1.add(transferBtn1);
 
         JButton generateReportBtn = new JButton("📄 Generate Report");
         generateReportBtn.setFont(new Font("Segoe UI Emoji", Font.BOLD, 13));
         generateReportBtn.setBackground(new Color(100, 180, 255));
-        generateReportBtn.setBounds(690, 746, 170, 30);
+        generateReportBtn.setBounds(691, 645, 170, 30);
         manageTransactionPanel1.add(generateReportBtn);
 
 
@@ -1131,4 +1143,211 @@ public class ControlPanel extends JFrame {
 		List<Account> customers = bank.getAllAccounts();
 		return customers.get(row); // Return the account based on the row index
 	}
+	
+	private void openCreateAccountDialog(DefaultTableModel tableModel) {
+	    JTextField nameField = new JTextField();
+	    JSpinner dobSpinner = new JSpinner(new SpinnerDateModel());
+	    dobSpinner.setEditor(new JSpinner.DateEditor(dobSpinner, "yyyy-MM-dd"));
+	    JTextField emailField = new JTextField();
+	    JTextField contactField = new JTextField();
+	    JTextField addressField = new JTextField();
+	    JPasswordField passwordField = new JPasswordField();
+	    JPasswordField confirmPasswordField = new JPasswordField();
+	    String[] accountTypes = {"Checking", "Savings", "Loan"};
+	    JComboBox<String> accountTypeBox = new JComboBox<>(accountTypes);
+	    JLabel lblInitial = new JLabel("Initial Deposit:");
+	    JTextField initialAmountField = new JTextField();
+
+	    // Dynamic label update for initial amount
+	    accountTypeBox.addActionListener(e -> {
+	        String selected = (String) accountTypeBox.getSelectedItem();
+	        if ("Loan".equalsIgnoreCase(selected)) {
+	            lblInitial.setText("Borrow Amount:");
+	        } else {
+	            lblInitial.setText("Initial Deposit:");
+	        }
+	    });
+
+	    JPanel panel = new JPanel(new GridLayout(0, 1));
+	    panel.add(new JLabel("Name:"));
+	    panel.add(nameField);
+	    panel.add(new JLabel("Date of Birth:"));
+	    panel.add(dobSpinner);
+	    panel.add(new JLabel("Email:"));
+	    panel.add(emailField);
+	    panel.add(new JLabel("Contact Number:"));
+	    panel.add(contactField);
+	    panel.add(new JLabel("Address:"));
+	    panel.add(addressField);
+	    panel.add(new JLabel("Password:"));
+	    panel.add(passwordField);
+	    panel.add(new JLabel("Confirm Password:"));
+	    panel.add(confirmPasswordField);
+	    panel.add(new JLabel("Account Type:"));
+	    panel.add(accountTypeBox);
+	    panel.add(lblInitial);
+	    panel.add(initialAmountField);
+
+	    int result = JOptionPane.showConfirmDialog(null, panel, "Create New Account",
+	            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+	    if (result == JOptionPane.OK_OPTION) {
+	        String name = nameField.getText().trim();
+	        Date dobDate = (Date) dobSpinner.getValue();
+	        String dob = new SimpleDateFormat("yyyy-MM-dd").format(dobDate);
+	        String email = emailField.getText().trim();
+	        String contact = contactField.getText().trim();
+	        String address = addressField.getText().trim();
+	        String password = new String(passwordField.getPassword()).trim();
+	        String confirmPassword = new String(confirmPasswordField.getPassword()).trim();
+	        String type = (String) accountTypeBox.getSelectedItem();
+	        String initialAmountStr = initialAmountField.getText().trim();
+
+	        // --- VALIDATION ---
+	        if (name.isEmpty() || dob.isEmpty() || email.isEmpty() || contact.isEmpty() ||
+	                address.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || initialAmountStr.isEmpty()) {
+	            JOptionPane.showMessageDialog(null, "All fields must be filled.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
+
+	        if (!email.contains("@") || !email.contains(".com")) {
+	            JOptionPane.showMessageDialog(null, "Invalid email format.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
+
+	        if (!contact.matches("\\d{10,11}")) {
+	            JOptionPane.showMessageDialog(null, "Invalid contact number (must be 10 or 11 digits).", "Validation Error", JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
+
+	        if (!password.equals(confirmPassword)) {
+	            JOptionPane.showMessageDialog(null, "Passwords do not match.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
+
+	        double initialAmount;
+	        try {
+	            initialAmount = Double.parseDouble(initialAmountStr);
+	            if (initialAmount < 0) throw new NumberFormatException();
+	        } catch (NumberFormatException e) {
+	            JOptionPane.showMessageDialog(null, "Invalid amount. Enter a valid positive number.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
+
+	        Bank bank = BankLedger.getInstance().getBank();
+	        Customer existingCustomer = bank.findCustomerByEmail(email);
+
+	        if (existingCustomer != null) {
+	            int choice = JOptionPane.showConfirmDialog(null,
+	                    "An account already exists with this email. Open a new account under the same user?",
+	                    "Duplicate Email", JOptionPane.YES_NO_OPTION);
+
+	            if (choice == JOptionPane.YES_OPTION) {
+	                boolean hasSameType = existingCustomer.getAccount().stream()
+	                        .anyMatch(acc -> acc.getAccountType().equalsIgnoreCase(type));
+
+	                if (hasSameType) {
+	                    JOptionPane.showMessageDialog(null,
+	                            "This customer already has a " + type + " account.",
+	                            "Duplicate Account Type", JOptionPane.WARNING_MESSAGE);
+	                    return;
+	                }
+
+	                Account newAccount = AccountFactory.createAccount(type, existingCustomer);
+	                
+	             // Handle loan account
+	                if ("Loan".equalsIgnoreCase(type)) {
+	                    ((LoanAccount) newAccount).borrow(initialAmount); // Handle loan-specific deposit (loan disbursement)
+	                    Notification loanNotification = new Notification(
+	                            "Loan Granted", 
+	                            "You borrowed PHP " + initialAmount + " as your starting loan.", 
+	                            LocalDate.now().toString()
+	                    );
+	                    newAccount.addNotification(loanNotification);
+	                } else {
+	                    newAccount.deposit(initialAmount);  // Handle deposit for savings/checking
+	                    Notification initialDepositNotification = new Notification(
+	                            "Initial Deposit Completed", 
+	                            "You deposited PHP " + initialAmount + " as initial deposit.", 
+	                            LocalDate.now().toString()
+	                    );
+	                    newAccount.addNotification(initialDepositNotification);
+	                }
+	                
+	                bank.addAccount(newAccount);
+	                existingCustomer.addAccount(newAccount);
+	                
+	                LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
+	    	        newAccount.addObserver(lowBalanceNotifier);
+
+	                tableModel.addRow(new Object[]{
+	                        newAccount.getAccountNumber(),
+	                        existingCustomer.getName(),
+	                        email,
+	                        contact,
+	                        address,
+	                        type,
+	                        new JButton("Generate")
+	                });
+
+	                JOptionPane.showMessageDialog(null, "New account added to existing customer.", "Success", JOptionPane.INFORMATION_MESSAGE);
+	                return;
+	            } else {
+	                return;
+	            }
+	        }
+
+	        // New customer
+	        Customer newCustomer = new Customer(name, dob, contact, email, address, password);
+	        Account newAccount;
+			
+	        try {
+	            newAccount = AccountFactory.createAccount(type, newCustomer);
+	            // Handle loan account
+	            if ("Loan".equalsIgnoreCase(type)) {
+	                ((LoanAccount) newAccount).borrow(initialAmount); // Handle loan-specific deposit (loan disbursement)
+	                Notification loanNotification = new Notification(
+	                        "Loan Granted", 
+	                        "You borrowed PHP " + initialAmount + " as your starting loan.", 
+	                        LocalDate.now().toString()
+	                );
+	                newAccount.addNotification(loanNotification);
+	            } else {
+	                newAccount.deposit(initialAmount);  // Handle deposit for savings/checking
+	                Notification initialDepositNotification = new Notification(
+	                        "Initial Deposit Completed", 
+	                        "You deposited PHP " + initialAmount + " as initial deposit.", 
+	                        LocalDate.now().toString()
+	                );
+	                newAccount.addNotification(initialDepositNotification);
+	            }
+	        } catch (IllegalArgumentException ex) {
+	            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+	            return;
+	        }
+
+	        BankLedger.getInstance().addAccount(newAccount);
+	        newCustomer.addAccount(newAccount);
+	        
+	        LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
+	        newAccount.addObserver(lowBalanceNotifier);
+
+	        tableModel.addRow(new Object[]{
+	                newAccount.getAccountNumber(),
+	                name,
+	                email,
+	                contact,
+	                address,
+	                type,
+	                new JButton("Generate")
+	        });
+
+	        JOptionPane.showMessageDialog(null, "New account created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+	    }
+	}
+
+
+
+
+
 }

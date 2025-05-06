@@ -21,7 +21,7 @@ import java.util.Date;
 public class RegisterForm extends JFrame {
 
 	public RegisterForm() {
-		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\Downloads\\bank.png"));
+		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
 		setTitle("Northland Bank Account Registration Form");
 		setSize(550, 600);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -45,7 +45,7 @@ public class RegisterForm extends JFrame {
 		headerTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 		headerTitle.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 		
-		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\Downloads\\bankicon-removebg-preview.png");
+		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bankicon-removebg-preview.png");
 		Image scaledImage = originalIcon.getImage().getScaledInstance(60, 50, Image.SCALE_SMOOTH); // width, height
 		ImageIcon resizedIcon = new ImageIcon(scaledImage);
 

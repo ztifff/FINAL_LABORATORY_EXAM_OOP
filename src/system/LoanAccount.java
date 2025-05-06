@@ -15,23 +15,6 @@ public class LoanAccount extends Account {
 		return loanBalance;
 	}
 
-	@Override
-	public boolean deposit(double amount) {
-		if (amount <= 0) {
-			JOptionPane.showMessageDialog(null, "Deposit amount must be positive.", "Invalid Deposit", JOptionPane.ERROR_MESSAGE);
-			return false;
-		}
-
-		if (amount > loanBalance) {
-			amount -= loanBalance;
-			loanBalance = 0;
-		} else {
-			loanBalance -= amount;
-		}
-
-		getHistory().addTransaction(new Transaction("Loan Repayment", amount, java.time.LocalDate.now()));
-		return true;
-	}
 
 	public boolean borrow(double amount) {
 		if (amount <= 0) {
@@ -39,8 +22,9 @@ public class LoanAccount extends Account {
 			return false;
 		}
 		this.loanBalance += amount;
-
+		
 		getHistory().addTransaction(new Transaction("Loan Disbursement", amount, java.time.LocalDate.now()));
+		notifyObservers();
 		return true;
 	}
 
@@ -56,6 +40,15 @@ public class LoanAccount extends Account {
 		loanBalance -= amount;
 
 		getHistory().addTransaction(new Transaction("Loan Repayment", amount, java.time.LocalDate.now()));
+		
+		// Add notification
+	    Notification repaymentNotification = new Notification(
+	        "Loan Repayment Received",
+	        "Your loan account received a repayment of PHP " + String.format("%.2f", amount),
+	        java.time.LocalDate.now().toString()
+	    );
+	    this.addNotification(repaymentNotification);
+		notifyObservers();
 		return true;
 	}
 

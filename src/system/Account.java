@@ -47,7 +47,7 @@ public class Account implements AccountSubject {
         return balance;
     }
 
-    public TransactionHistory getHistory() {
+	public TransactionHistory getHistory() {
         return history;
     }
 
@@ -82,15 +82,29 @@ public class Account implements AccountSubject {
             return false;
         }
 
+        // Deduct from sender
         this.balance -= amount;
-        recipient.balance += amount;
 
+        // Check if recipient is a LoanAccount (repay loan instead of adding to balance)
+        if (recipient instanceof LoanAccount) {
+            LoanAccount loan = (LoanAccount) recipient;
+            loan.repayLoan(amount);
+            
+        } else {
+            // Regular transfer for Checking or Savings
+            recipient.balance += amount;
+        }
+
+        // Record transaction history
         history.addTransaction(new Transaction("Transfer to " + recipient.getOwner().getName(), amount, LocalDate.now()));
         recipient.getHistory().addTransaction(new Transaction("Transfer from " + this.getOwner().getName(), amount, LocalDate.now()));
 
-        notifyObservers();  // Notify observers when balance changes
+        notifyObservers();  // Notify sender observers
+        recipient.notifyObservers();  // Also notify recipient observers
+
         return true;
     }
+
 
     // Observer Methods (AccountSubject Interface Implementation)
     @Override

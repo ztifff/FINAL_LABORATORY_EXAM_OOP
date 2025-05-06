@@ -38,7 +38,7 @@ public class Dashboard extends JFrame {
 
 
 	public Dashboard(Account account) {
-		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\Downloads/bank.png"));
+		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
 		setTitle("Northland Bank");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(1200, 920);
@@ -984,22 +984,40 @@ public class Dashboard extends JFrame {
 				Account recipientAccount = bankLedger.findAccountByName(recipientAccountName);
 
 				if (transactionType.equals("Transferred")) {
-					Notification transferNotification = new Notification(
-							"Transfer Completed", 
-							"You transferred PHP " + amount + " to " + recipientAccount.getOwner().getName() + ".", 
-							date
-							);
-					account.addNotification(transferNotification);  
-					Notification receivedNotification = new Notification(
-							"Money Received", 
-							"You received PHP " + amount + " from " + account.getOwner().getName() + ".", 
-							date
-							);
-					recipientAccount.addNotification(receivedNotification);
-					refreshNotifications(account);
-					recentTransactionListModel.addElement("• Transferred: ₱" + amount);
-				} 
-				else if (transactionType.equals("Loan Payment")) {
+					 if (recipientAccount instanceof LoanAccount) {
+					        Notification repaymentNotification = new Notification(
+					            "Loan Repayment Sent", 
+					            "You repaid PHP " + amount + " to the loan account of " + recipientAccount.getOwner().getName() + ".", 
+					            date
+					        );
+					        account.addNotification(repaymentNotification);
+
+					        Notification receivedLoanRepayment = new Notification(
+					            "Loan Repayment Received", 
+					            "Your loan account received PHP " + amount + " from " + account.getOwner().getName() + ".", 
+					            date
+					        );
+					        recipientAccount.addNotification(receivedLoanRepayment);
+					        
+					        recentTransactionListModel.addElement("• Repaid Loan: ₱" + amount);
+					    } else {
+					        Notification transferNotification = new Notification(
+					            "Transfer Completed", 
+					            "You transferred PHP " + amount + " to " + recipientAccount.getOwner().getName() + ".", 
+					            date
+					        );
+					        account.addNotification(transferNotification);
+
+					        Notification receivedNotification = new Notification(
+					            "Money Received", 
+					            "You received PHP " + amount + " from " + account.getOwner().getName() + ".", 
+					            date
+					        );
+					        recipientAccount.addNotification(receivedNotification);
+					        recentTransactionListModel.addElement("• Transferred: ₱" + amount);
+					    }
+					 refreshNotifications(account);
+				} else if (transactionType.equals("Loan Payment")) {
 					Notification loanPaymentNotification = new Notification(
 							"Loan Payment", 
 							"You paid a loan of PHP " + amount + ".", 

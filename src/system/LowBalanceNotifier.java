@@ -19,7 +19,7 @@ public class LowBalanceNotifier implements AccountObserver {
                 "⚠️ Balance below ₱1000: ₱" + account.getBalance(),
                 java.time.LocalDate.now().toString()
             );
-            account.addNotification(notification);  // Add to BankLedger notifications
+            account.addNotification(notification);  
         }
 
         // High loan balance alert
@@ -35,7 +35,7 @@ public class LowBalanceNotifier implements AccountObserver {
                     "⚠️ Your loan balance is high! Current Loan Balance: ₱" + String.format("%.2f", loanBalance),
                     java.time.LocalDate.now().toString()
                 );
-                account.addNotification(notification);  // Add to BankLedger notifications
+                account.addNotification(notification);  
             }
         }
     }
