@@ -41,7 +41,7 @@ public class BankLedger {
     
     public Account getAccountByNumber(String accountNumber) {
         for (Account account : accounts) {
-            if (account.getAccountNumber().equals(accountNumber)) {
+            if (account.getAccountNumber().trim().equalsIgnoreCase(accountNumber.trim())) {
                 return account;
             }
         }

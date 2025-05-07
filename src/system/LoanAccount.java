@@ -16,6 +16,10 @@ public class LoanAccount extends Account {
 	}
 
 
+	public void setLoanBalance(double loanBalance) {
+		this.loanBalance = loanBalance;
+	}
+
 	public boolean borrow(double amount) {
 		if (amount <= 0) {
 			JOptionPane.showMessageDialog(null, "Borrow amount must be positive.", "Invalid Borrow", JOptionPane.ERROR_MESSAGE);

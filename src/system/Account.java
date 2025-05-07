@@ -88,16 +88,24 @@ public class Account implements AccountSubject {
         // Check if recipient is a LoanAccount (repay loan instead of adding to balance)
         if (recipient instanceof LoanAccount) {
             LoanAccount loan = (LoanAccount) recipient;
-            loan.repayLoan(amount);
+            double remainingLoan = loan.getLoanBalance();
+            double repaymentAmount = Math.min(amount, remainingLoan);
+            loan.setLoanBalance(remainingLoan - repaymentAmount);
+
+            // Add transaction for loan repayment
+            loan.getHistory().addTransaction(
+            	    new Transaction("Loan Repayment from " + this.getOwner().getName(), repaymentAmount, LocalDate.now())
+            	);
             
         } else {
             // Regular transfer for Checking or Savings
             recipient.balance += amount;
+            recipient.getHistory().addTransaction(new Transaction("Transfer from " + this.getOwner().getName(), amount, LocalDate.now()));
         }
 
         // Record transaction history
         history.addTransaction(new Transaction("Transfer to " + recipient.getOwner().getName(), amount, LocalDate.now()));
-        recipient.getHistory().addTransaction(new Transaction("Transfer from " + this.getOwner().getName(), amount, LocalDate.now()));
+        
 
         notifyObservers();  // Notify sender observers
         recipient.notifyObservers();  // Also notify recipient observers

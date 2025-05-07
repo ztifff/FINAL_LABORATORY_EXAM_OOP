@@ -377,12 +377,15 @@ public class Dashboard extends JFrame {
 		JLabel lblAccountNumber = new JLabel("Account Number:");
 		lblAccountNumber.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtAccountNumber = new JTextField(account.getAccountNumber());
+		txtAccountNumber.setFocusable(false);
 		txtAccountNumber.setEditable(false);
 		txtAccountNumber.setBackground(new Color(240, 240, 240));
 
 		JLabel lblAccountHolder = new JLabel("Account Holder Name:");
 		lblAccountHolder.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtAccountHolder = new JTextField(account.getOwner().getName());
+		txtAccountHolder.setToolTipText(account.getOwner().getName());
+		txtAccountHolder.setFocusable(false);
 		txtAccountHolder.setEditable(false);
 		txtAccountHolder.setBackground(new Color(240, 240, 240));
 
@@ -448,6 +451,7 @@ public class Dashboard extends JFrame {
 		JLabel lblDate = new JLabel("Date:");
 		lblDate.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtDate = new JTextField();
+		txtDate.setFocusable(false);
 		txtDate.setEditable(false);
 		txtDate.setText(java.time.LocalDate.now().toString());
 		txtDate.setBackground(new Color(240, 240, 240));
@@ -590,6 +594,9 @@ public class Dashboard extends JFrame {
 			} else if (type.startsWith("Transfer from ")) {
 				recipient = type.substring(14); // Extract recipient from action text
 				type = "Transfer Received";
+			} else if (type.startsWith("Loan Repayment from")) {
+				recipient = type.substring(20); // Extract sender's name
+		        type = "Loan Repayment";
 			}
 
 			// Add row to table
@@ -676,6 +683,7 @@ public class Dashboard extends JFrame {
 		JLabel lblUsernameAccount = new JLabel("Name:");
 		lblUsernameAccount.setHorizontalAlignment(SwingConstants.CENTER);
 		JLabel lblUsernameInfo = new JLabel(account.getOwner().getName());
+		lblUsernameInfo.setToolTipText(account.getOwner().getName());
 		lblUsernameInfo.setHorizontalAlignment(SwingConstants.CENTER);
 
 		accountHolderPanel.add(lblUsernameAccount);
@@ -774,7 +782,7 @@ public class Dashboard extends JFrame {
 		notificationContentPanel.setLayout(new BoxLayout(notificationContentPanel, BoxLayout.Y_AXIS));
 		notificationContentPanel.setBackground(new Color(245, 245, 245));
 		refreshNotifications(account);
-
+		updateRecentTransactions();
 
 
 		// Scroll pane wrapping the content
@@ -984,39 +992,39 @@ public class Dashboard extends JFrame {
 				Account recipientAccount = bankLedger.findAccountByName(recipientAccountName);
 
 				if (transactionType.equals("Transferred")) {
-					 if (recipientAccount instanceof LoanAccount) {
-					        Notification repaymentNotification = new Notification(
-					            "Loan Repayment Sent", 
-					            "You repaid PHP " + amount + " to the loan account of " + recipientAccount.getOwner().getName() + ".", 
-					            date
-					        );
-					        account.addNotification(repaymentNotification);
+					if (recipientAccount instanceof LoanAccount) {
+						Notification repaymentNotification = new Notification(
+								"Loan Repayment Sent", 
+								"You repaid PHP " + amount + " to the loan account of " + recipientAccount.getOwner().getName() + ".", 
+								date
+								);
+						account.addNotification(repaymentNotification);
 
-					        Notification receivedLoanRepayment = new Notification(
-					            "Loan Repayment Received", 
-					            "Your loan account received PHP " + amount + " from " + account.getOwner().getName() + ".", 
-					            date
-					        );
-					        recipientAccount.addNotification(receivedLoanRepayment);
-					        
-					        recentTransactionListModel.addElement("• Repaid Loan: ₱" + amount);
-					    } else {
-					        Notification transferNotification = new Notification(
-					            "Transfer Completed", 
-					            "You transferred PHP " + amount + " to " + recipientAccount.getOwner().getName() + ".", 
-					            date
-					        );
-					        account.addNotification(transferNotification);
+						Notification receivedLoanRepayment = new Notification(
+								"Loan Repayment Received", 
+								"Your loan account received PHP " + amount + " from " + account.getOwner().getName() + ".", 
+								date
+								);
+						recipientAccount.addNotification(receivedLoanRepayment);
 
-					        Notification receivedNotification = new Notification(
-					            "Money Received", 
-					            "You received PHP " + amount + " from " + account.getOwner().getName() + ".", 
-					            date
-					        );
-					        recipientAccount.addNotification(receivedNotification);
-					        recentTransactionListModel.addElement("• Transferred: ₱" + amount);
-					    }
-					 refreshNotifications(account);
+						recentTransactionListModel.addElement("• Repaid Loan: ₱" + amount);
+					} else {
+						Notification transferNotification = new Notification(
+								"Transfer Completed", 
+								"You transferred PHP " + amount + " to " + recipientAccount.getOwner().getName() + ".", 
+								date
+								);
+						account.addNotification(transferNotification);
+
+						Notification receivedNotification = new Notification(
+								"Money Received", 
+								"You received PHP " + amount + " from " + account.getOwner().getName() + ".", 
+								date
+								);
+						recipientAccount.addNotification(receivedNotification);
+						recentTransactionListModel.addElement("• Transferred: ₱" + amount);
+					}
+					refreshNotifications(account);
 				} else if (transactionType.equals("Loan Payment")) {
 					Notification loanPaymentNotification = new Notification(
 							"Loan Payment", 
@@ -1079,6 +1087,8 @@ public class Dashboard extends JFrame {
 			} else if (type.startsWith("Transfer from ")) {
 				recipient = type.substring(14); // Extract recipient from action text
 				type = "Transfer Received";
+			} else if (type.equals("Loan Repayment")) {
+
 			}
 
 			// Add row to table

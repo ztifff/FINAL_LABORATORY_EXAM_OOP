@@ -15,17 +15,22 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.Point;
 import java.awt.SystemColor;
 import java.awt.Toolkit;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -35,6 +40,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerDateModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
@@ -83,7 +89,7 @@ public class ControlPanel extends JFrame {
 	public ControlPanel(Admin admin) {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
 		setTitle("Monthly Transaction Summary");
-		setSize(1200, 831);
+		setSize(1243, 831);
 		getContentPane().setLayout(null);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		getContentPane().setBackground(Color.WHITE);
@@ -237,7 +243,7 @@ public class ControlPanel extends JFrame {
 		reportsToggle.addActionListener(e -> setActiveButton(reportsToggle));
 
 		JPanel switchPanel = new JPanel();
-		switchPanel.setBounds(268, 0, 916, 881);
+		switchPanel.setBounds(268, 0, 959, 881);
 		getContentPane().add(switchPanel);
 		switchPanel.setLayout(new CardLayout(0, 0));
 
@@ -276,10 +282,10 @@ public class ControlPanel extends JFrame {
 
 		// Table Panel with JTable
 		tablePanel = new JPanel();
-		tablePanel.setBounds(51, 223, 826, 508); // Adjust height as needed
+		tablePanel.setBounds(10, 223, 939, 526); // Adjust height as needed
 		tablePanel.setLayout(new BorderLayout());
 
-		String[] manageAccountsHeaders = {"ID", "Name", "Email", "Contact Number", "Address", "Account Type", "Generate Report"};
+		String[] manageAccountsHeaders = {"ID", "Name", "Email", "Contact", "Type", "Password", "Report"};
 		DefaultTableModel tableModel = new DefaultTableModel(manageAccountsHeaders, 0) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
@@ -287,52 +293,70 @@ public class ControlPanel extends JFrame {
 			}
 		};
 
-		table = new JTable(tableModel);
+		table = new JTable(tableModel) {
+		    @Override
+		    public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+		        Component comp = super.prepareRenderer(renderer, row, column);
+		        if (comp instanceof JComponent) {
+		            Object value = getValueAt(row, column);
+		            if (value != null) {
+		                ((JComponent) comp).setToolTipText(value.toString());
+		            } else {
+		                ((JComponent) comp).setToolTipText(null);
+		            }
+		        }
+		        return comp;
+		    }
+		};
 
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); 
+		table.setEnabled(true);
+		table.setRowSelectionAllowed(true);
+		table.setColumnSelectionAllowed(false);
+		table.setCellSelectionEnabled(false);
 		table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 		table.setRowHeight(30); 
 		table.setFillsViewportHeight(true);
+			
+		
+		
 
-		// Custom cell renderer for the button column (7th column, index 6)
+		// Custom cell renderer for the button column 
 		table.getColumnModel().getColumn(6).setCellRenderer(new TableCellRenderer() {
-			@Override
-			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-				JButton button = (JButton) value;
+		    @Override
+		    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+		        JButton button = new JButton("Generate");
 
-				// Set padding (top, left, bottom, right)
-				button.setMargin(new Insets(0, 10, 0, 10)); // Adjusted padding to make button smaller
+		        // Set button appearance (same as before)
+		        button.setMargin(new Insets(0, 10, 0, 10));
+		        button.setPreferredSize(new Dimension(button.getPreferredSize().width, 30));
+		        button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		        button.setBackground(new Color(0, 123, 255));
+		        button.setForeground(Color.WHITE);
+		        button.setFocusPainted(false);
+		        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-				// Set a fixed height for the button to reduce the height
-				button.setPreferredSize(new Dimension(button.getPreferredSize().width, 30)); // Fixed height of 30
+		        // Hover effect
+		        button.addMouseListener(new MouseAdapter() {
+		            @Override
+		            public void mouseEntered(MouseEvent e) {
+		                button.setBackground(new Color(0, 105, 217));
+		            }
 
-				// Button design (rounded corners, font, color)
-				button.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-				button.setBackground(new Color(0, 123, 255));  // Blue background
-				button.setForeground(Color.WHITE);  // White text
-				button.setFocusPainted(false);  // Remove focus border
-				button.setCursor(new Cursor(Cursor.HAND_CURSOR));  // Change cursor on hover
+		            @Override
+		            public void mouseExited(MouseEvent e) {
+		                button.setBackground(new Color(0, 123, 255));
+		            }
+		        });
 
-				// Hover effect (change background color when hovered)
-				button.addMouseListener(new MouseAdapter() {
-					@Override
-					public void mouseEntered(MouseEvent e) {
-						button.setBackground(new Color(0, 105, 217));  // Darker blue on hover
-					}
-
-					@Override
-					public void mouseExited(MouseEvent e) {
-						button.setBackground(new Color(0, 123, 255));  // Reset to original blue
-					}
-				});
-
-				// Center the button in the cell
-				JPanel panel = new JPanel(new GridBagLayout());
-				panel.add(button);
-				return panel; // Return the panel containing the button
-			}
+		        JPanel panel = new JPanel(new GridBagLayout());
+		        panel.add(button);
+		        return panel;
+		    }
 		});
 
-		// Custom cell editor for the button column (7th column, index 6)
+
+		// Custom cell editor for the button column 
 		table.getColumnModel().getColumn(6).setCellEditor(new TableCellEditor() {
 			@Override
 			public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
@@ -340,7 +364,7 @@ public class ControlPanel extends JFrame {
 
 				// Set padding (top, left, bottom, right)
 				button.setMargin(new Insets(0, 10, 0, 10)); // Adjusted padding to make button smaller
-
+				table.setRowSelectionInterval(row, row);
 				// Set a fixed height for the button to reduce the height
 				button.setPreferredSize(new Dimension(button.getPreferredSize().width, 30)); // Fixed height of 30
 
@@ -419,7 +443,6 @@ public class ControlPanel extends JFrame {
 		});
 
 
-
 		// Fetch account data and add to table
 		Bank bank = BankLedger.getInstance().getBank();
 		List<Account> customers = bank.getAllAccounts();
@@ -430,13 +453,11 @@ public class ControlPanel extends JFrame {
 			String name = account.getOwner().getName();
 			String email = account.getOwner().getEmail();
 			String contact = account.getOwner().getContactNumber();
-			String address = account.getOwner().getAddress();
 			String accountType = account.getAccountType();
-			JButton generateButton = new JButton("Generate");
-			generateButton.setMargin(new Insets(0, 10, 0, 10)); // Add padding to center button
+			String password = account.getOwner().getPassword();
 
 			// Add row to table
-			tableModel.addRow(new Object[]{accountNumber, name, email, contact, address, accountType, generateButton});
+			tableModel.addRow(new Object[]{accountNumber, name, email, contact, accountType, password, "Generate"});
 		}
 
 
@@ -452,6 +473,21 @@ public class ControlPanel extends JFrame {
 		scrollPane = new JScrollPane(table);
 		tablePanel.add(scrollPane, BorderLayout.CENTER);
 		manageAccounts1.add(tablePanel);
+		
+
+		table.addMouseListener(new MouseAdapter() {
+		    @Override
+		    public void mousePressed(MouseEvent e) {
+		        Point point = e.getPoint();
+		        int row = table.rowAtPoint(point);
+
+		        // Ensure the row gets selected even if button is clicked
+		        if (row != -1) {
+		            table.setRowSelectionInterval(row, row);
+		        }
+		    }
+		});
+
 
 		// Button controls
 		JButton btnNewButton = new JButton("➕ Create New");
@@ -470,6 +506,96 @@ public class ControlPanel extends JFrame {
 		btnEdit.setBackground(new Color(255, 193, 7)); // Yellow
 		btnEdit.setForeground(Color.BLACK);
 		manageAccounts1.add(btnEdit);
+		
+		
+		btnEdit.addActionListener(e -> {
+		    int selectedRow = table.getSelectedRow();
+
+		    if (selectedRow == -1) {
+		        JOptionPane.showMessageDialog(null, "Please select a row to edit.", "No Selection", JOptionPane.WARNING_MESSAGE);
+		        return;
+		    }
+
+		    String accountNumber = table.getValueAt(selectedRow, 0).toString();
+		    BankLedger bankLedger = BankLedger.getInstance();
+		    Account selectedAccount = bankLedger.getAccountByNumber(accountNumber);
+
+		    if (selectedAccount == null) {
+		        JOptionPane.showMessageDialog(null, "Account not found.", "Error", JOptionPane.ERROR_MESSAGE);
+		        return;
+		    }
+
+		    Customer owner = selectedAccount.getOwner();
+
+		    // Create input fields pre-filled with current data
+		    JTextField nameField = new JTextField(owner.getName());
+		    JTextField contactField = new JTextField(owner.getContactNumber());
+		    JPasswordField passwordField = new JPasswordField(owner.getPassword());
+
+		    Dimension fieldSize = new Dimension(200, 25);
+		    nameField.setPreferredSize(fieldSize);
+		    contactField.setPreferredSize(fieldSize);
+		    passwordField.setPreferredSize(fieldSize);
+
+		    // Create inner grid layout for form
+		    JPanel formGrid = new JPanel(new GridLayout(4, 2, 10, 10));
+		    formGrid.add(new JLabel("Name:"));
+		    formGrid.add(nameField);
+		    formGrid.add(new JLabel("Contact Number:"));
+		    formGrid.add(contactField);
+		    formGrid.add(new JLabel("Password:"));
+		    formGrid.add(passwordField);
+
+		    // Wrap with GridBagLayout for centering and padding
+		    JPanel formPanel = new JPanel(new GridBagLayout());
+		    formPanel.setBorder(BorderFactory.createTitledBorder("Edit Account Information"));
+
+		    GridBagConstraints gbc = new GridBagConstraints();
+		    gbc.gridx = 0;
+		    gbc.gridy = 0;
+		    gbc.insets = new Insets(10, 10, 10, 10);
+		    formPanel.add(formGrid, gbc);
+
+		    nameField.requestFocusInWindow();
+
+		    int result = JOptionPane.showConfirmDialog(
+		            null,
+		            formPanel,
+		            "Edit Account Details",
+		            JOptionPane.OK_CANCEL_OPTION,
+		            JOptionPane.PLAIN_MESSAGE
+		    );
+
+		    if (result == JOptionPane.OK_OPTION) {
+		        String newName = nameField.getText().trim();
+		        String newContact = contactField.getText().trim();
+		        String newPassword = new String(passwordField.getPassword()).trim();
+
+		        if (newName.isEmpty() || newContact.isEmpty() || newPassword.isEmpty()) {
+		            JOptionPane.showMessageDialog(null, "All fields must be filled.", "Validation Error", JOptionPane.ERROR_MESSAGE);
+		            return;
+		        }
+
+		        if (!newContact.matches("\\d{10,11}")) {
+		            JOptionPane.showMessageDialog(null, "Invalid contact number (must be 10 or 11 digits).", "Validation Error", JOptionPane.ERROR_MESSAGE);
+		            return;
+		        }
+
+		        owner.setName(newName);
+		        owner.setContactNumber(newContact);
+		        owner.setPassword(newPassword);
+
+		        table.setValueAt(newName, selectedRow, 1);
+		        table.setValueAt(newContact, selectedRow, 3);
+		        table.setValueAt(newPassword, selectedRow, 5);
+
+		        JOptionPane.showMessageDialog(null, "Account details updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+		    }
+		});
+
+
+
+
 
 		JButton btnDelete = new JButton("🗑️ Delete");
 		btnDelete.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
@@ -547,13 +673,13 @@ public class ControlPanel extends JFrame {
 			}
 		};
 
-		table = new JTable(tableModel1);
+		JTable table1 = new JTable(tableModel1);
 
-		table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-		table.setRowHeight(30); 
-		table.setFillsViewportHeight(true); 
+		table1.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		table1.setRowHeight(30); 
+		table1.setFillsViewportHeight(true); 
 
-		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+		table1.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 					boolean hasFocus, int row, int column) {
@@ -611,14 +737,14 @@ public class ControlPanel extends JFrame {
 
 
 
-		JTableHeader header1 = table.getTableHeader();
+		JTableHeader header1 = table1.getTableHeader();
 		header1.setFont(new Font("Segoe UI", Font.BOLD, 14));
 		header1.setBackground(new Color(220, 220, 220));
 		header1.setForeground(Color.BLACK);
 		header1.setReorderingAllowed(false);
 		header1.setResizingAllowed(false);
 
-		scrollPane = new JScrollPane(table);
+		scrollPane = new JScrollPane(table1);
 		tablePanel.add(scrollPane, BorderLayout.CENTER);
 		montlyTransactionSummaryPanel1.add(tablePanel);
 
@@ -1116,10 +1242,11 @@ public class ControlPanel extends JFrame {
 			String contact = account.getOwner().getContactNumber();
 			String address = account.getOwner().getAddress();
 			String accountType = account.getAccountType();
+			String password = account.getOwner().getPassword();
 			JButton generateButton = new JButton("Generate");
 			generateButton.setMargin(new Insets(10, 20, 10, 20));
 			// Add row to table
-			tableModel.addRow(new Object[]{accountNumber, name, email, contact, address, accountType, generateButton});
+			tableModel.addRow(new Object[]{accountNumber, name, email, contact, address, accountType, password, generateButton});
 		}
 	}
 
@@ -1145,50 +1272,68 @@ public class ControlPanel extends JFrame {
 	}
 	
 	private void openCreateAccountDialog(DefaultTableModel tableModel) {
-	    JTextField nameField = new JTextField();
+	    // Fields
+	    JTextField nameField = new JTextField(20);
 	    JSpinner dobSpinner = new JSpinner(new SpinnerDateModel());
 	    dobSpinner.setEditor(new JSpinner.DateEditor(dobSpinner, "yyyy-MM-dd"));
-	    JTextField emailField = new JTextField();
-	    JTextField contactField = new JTextField();
-	    JTextField addressField = new JTextField();
-	    JPasswordField passwordField = new JPasswordField();
-	    JPasswordField confirmPasswordField = new JPasswordField();
+	    JTextField emailField = new JTextField(20);
+	    JTextField contactField = new JTextField(15);
+	    JTextField addressField = new JTextField(30);
+	    JPasswordField passwordField = new JPasswordField(20);
+	    JPasswordField confirmPasswordField = new JPasswordField(20);
 	    String[] accountTypes = {"Checking", "Savings", "Loan"};
 	    JComboBox<String> accountTypeBox = new JComboBox<>(accountTypes);
 	    JLabel lblInitial = new JLabel("Initial Deposit:");
-	    JTextField initialAmountField = new JTextField();
+	    JTextField initialAmountField = new JTextField(10);
 
-	    // Dynamic label update for initial amount
+	    // Tooltips
+	    nameField.setToolTipText("Full legal name");
+	    emailField.setToolTipText("example@gmail.com");
+	    contactField.setToolTipText("10-11 digit phone number");
+	    addressField.setToolTipText("Complete address");
+	    passwordField.setToolTipText("Enter a secure password");
+	    confirmPasswordField.setToolTipText("Re-enter password");
+	    initialAmountField.setToolTipText("Amount to deposit or borrow");
+
+	    // Dynamic label switcher
 	    accountTypeBox.addActionListener(e -> {
 	        String selected = (String) accountTypeBox.getSelectedItem();
-	        if ("Loan".equalsIgnoreCase(selected)) {
-	            lblInitial.setText("Borrow Amount:");
-	        } else {
-	            lblInitial.setText("Initial Deposit:");
-	        }
+	        lblInitial.setText("Loan".equalsIgnoreCase(selected) ? "Borrow Amount:" : "Initial Deposit:");
 	    });
 
-	    JPanel panel = new JPanel(new GridLayout(0, 1));
-	    panel.add(new JLabel("Name:"));
-	    panel.add(nameField);
-	    panel.add(new JLabel("Date of Birth:"));
-	    panel.add(dobSpinner);
-	    panel.add(new JLabel("Email:"));
-	    panel.add(emailField);
-	    panel.add(new JLabel("Contact Number:"));
-	    panel.add(contactField);
-	    panel.add(new JLabel("Address:"));
-	    panel.add(addressField);
-	    panel.add(new JLabel("Password:"));
-	    panel.add(passwordField);
-	    panel.add(new JLabel("Confirm Password:"));
-	    panel.add(confirmPasswordField);
-	    panel.add(new JLabel("Account Type:"));
-	    panel.add(accountTypeBox);
-	    panel.add(lblInitial);
-	    panel.add(initialAmountField);
+	    // Panels
+	    JPanel personalPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+	    personalPanel.setBorder(BorderFactory.createTitledBorder("Personal Information"));
+	    personalPanel.add(new JLabel("Name:"));
+	    personalPanel.add(nameField);
+	    personalPanel.add(new JLabel("Date of Birth:"));
+	    personalPanel.add(dobSpinner);
+	    personalPanel.add(new JLabel("Email:"));
+	    personalPanel.add(emailField);
+	    personalPanel.add(new JLabel("Contact Number:"));
+	    personalPanel.add(contactField);
+	    personalPanel.add(new JLabel("Address:"));
+	    personalPanel.add(addressField);
+	    personalPanel.add(new JLabel("Password:"));
+	    personalPanel.add(passwordField);
+	    personalPanel.add(new JLabel("Confirm Password:"));
+	    personalPanel.add(confirmPasswordField);
 
-	    int result = JOptionPane.showConfirmDialog(null, panel, "Create New Account",
+	    JPanel accountPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+	    accountPanel.setBorder(BorderFactory.createTitledBorder("Account Details"));
+	    accountPanel.add(new JLabel("Account Type:"));
+	    accountPanel.add(accountTypeBox);
+	    accountPanel.add(lblInitial);
+	    accountPanel.add(initialAmountField);
+
+	    JPanel contentPanel = new JPanel();
+	    contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+	    contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+	    contentPanel.add(personalPanel);
+	    contentPanel.add(Box.createVerticalStrut(10));
+	    contentPanel.add(accountPanel);
+
+	    int result = JOptionPane.showConfirmDialog(null, contentPanel, "Create New Account",
 	            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
 	    if (result == JOptionPane.OK_OPTION) {
@@ -1203,7 +1348,7 @@ public class ControlPanel extends JFrame {
 	        String type = (String) accountTypeBox.getSelectedItem();
 	        String initialAmountStr = initialAmountField.getText().trim();
 
-	        // --- VALIDATION ---
+	        // Validation
 	        if (name.isEmpty() || dob.isEmpty() || email.isEmpty() || contact.isEmpty() ||
 	                address.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || initialAmountStr.isEmpty()) {
 	            JOptionPane.showMessageDialog(null, "All fields must be filled.", "Validation Error", JOptionPane.ERROR_MESSAGE);
@@ -1254,31 +1399,22 @@ public class ControlPanel extends JFrame {
 	                }
 
 	                Account newAccount = AccountFactory.createAccount(type, existingCustomer);
-	                
-	             // Handle loan account
+
 	                if ("Loan".equalsIgnoreCase(type)) {
-	                    ((LoanAccount) newAccount).borrow(initialAmount); // Handle loan-specific deposit (loan disbursement)
-	                    Notification loanNotification = new Notification(
-	                            "Loan Granted", 
-	                            "You borrowed PHP " + initialAmount + " as your starting loan.", 
-	                            LocalDate.now().toString()
-	                    );
-	                    newAccount.addNotification(loanNotification);
+	                    ((LoanAccount) newAccount).borrow(initialAmount);
+	                    newAccount.addNotification(new Notification("Loan Granted",
+	                            "You borrowed PHP " + initialAmount + " as your starting loan.",
+	                            LocalDate.now().toString()));
 	                } else {
-	                    newAccount.deposit(initialAmount);  // Handle deposit for savings/checking
-	                    Notification initialDepositNotification = new Notification(
-	                            "Initial Deposit Completed", 
-	                            "You deposited PHP " + initialAmount + " as initial deposit.", 
-	                            LocalDate.now().toString()
-	                    );
-	                    newAccount.addNotification(initialDepositNotification);
+	                    newAccount.deposit(initialAmount);
+	                    newAccount.addNotification(new Notification("Initial Deposit Completed",
+	                            "You deposited PHP " + initialAmount + " as initial deposit.",
+	                            LocalDate.now().toString()));
 	                }
-	                
+
 	                bank.addAccount(newAccount);
 	                existingCustomer.addAccount(newAccount);
-	                
-	                LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
-	    	        newAccount.addObserver(lowBalanceNotifier);
+	                newAccount.addObserver(new LowBalanceNotifier());
 
 	                tableModel.addRow(new Object[]{
 	                        newAccount.getAccountNumber(),
@@ -1300,26 +1436,19 @@ public class ControlPanel extends JFrame {
 	        // New customer
 	        Customer newCustomer = new Customer(name, dob, contact, email, address, password);
 	        Account newAccount;
-			
+
 	        try {
 	            newAccount = AccountFactory.createAccount(type, newCustomer);
-	            // Handle loan account
 	            if ("Loan".equalsIgnoreCase(type)) {
-	                ((LoanAccount) newAccount).borrow(initialAmount); // Handle loan-specific deposit (loan disbursement)
-	                Notification loanNotification = new Notification(
-	                        "Loan Granted", 
-	                        "You borrowed PHP " + initialAmount + " as your starting loan.", 
-	                        LocalDate.now().toString()
-	                );
-	                newAccount.addNotification(loanNotification);
+	                ((LoanAccount) newAccount).borrow(initialAmount);
+	                newAccount.addNotification(new Notification("Loan Granted",
+	                        "You borrowed PHP " + initialAmount + " as your starting loan.",
+	                        LocalDate.now().toString()));
 	            } else {
-	                newAccount.deposit(initialAmount);  // Handle deposit for savings/checking
-	                Notification initialDepositNotification = new Notification(
-	                        "Initial Deposit Completed", 
-	                        "You deposited PHP " + initialAmount + " as initial deposit.", 
-	                        LocalDate.now().toString()
-	                );
-	                newAccount.addNotification(initialDepositNotification);
+	                newAccount.deposit(initialAmount);
+	                newAccount.addNotification(new Notification("Initial Deposit Completed",
+	                        "You deposited PHP " + initialAmount + " as initial deposit.",
+	                        LocalDate.now().toString()));
 	            }
 	        } catch (IllegalArgumentException ex) {
 	            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -1328,9 +1457,7 @@ public class ControlPanel extends JFrame {
 
 	        BankLedger.getInstance().addAccount(newAccount);
 	        newCustomer.addAccount(newAccount);
-	        
-	        LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
-	        newAccount.addObserver(lowBalanceNotifier);
+	        newAccount.addObserver(new LowBalanceNotifier());
 
 	        tableModel.addRow(new Object[]{
 	                newAccount.getAccountNumber(),
@@ -1345,6 +1472,7 @@ public class ControlPanel extends JFrame {
 	        JOptionPane.showMessageDialog(null, "New account created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
 	    }
 	}
+
 
 
 
