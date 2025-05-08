@@ -29,6 +29,7 @@ public class BankLedger {
     
     public void removeAccount(Account account) {
         accounts.remove(account);
+        bank.removeAccount(account);
     }
     
     public List<Account> getAllAccounts() {

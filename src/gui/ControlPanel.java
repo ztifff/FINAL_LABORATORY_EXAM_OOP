@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EventObject;
 import java.util.List;
@@ -41,6 +43,7 @@ import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.RowFilter;
 import javax.swing.SpinnerDateModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
@@ -50,11 +53,13 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
 
 import system.Account;
 import system.AccountFactory;
 import system.Admin;
 import system.Bank;
+import system.BankController;
 import system.BankLedger;
 import system.CheckingAccount;
 import system.Customer;
@@ -85,6 +90,7 @@ public class ControlPanel extends JFrame {
 	private JTable table;
 	private JTextField textField;
 	private JButton[] buttons;
+	private BankController controller = new BankController();
 
 	public ControlPanel(Admin admin) {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
@@ -259,7 +265,7 @@ public class ControlPanel extends JFrame {
 
 		// --- HEADER ---
 		JPanel manageAccountsheaderpanel = new JPanel();
-		manageAccountsheaderpanel.setBounds(0, 0, 916, 72);
+		manageAccountsheaderpanel.setBounds(0, 0, 959, 72);
 		manageAccountsheaderpanel.setBackground(new Color(52, 58, 64)); // Darker header (professional)
 		manageAccountsheaderpanel.setPreferredSize(new Dimension(0, 80));
 		manageAccountsheaderpanel.setLayout(new GridLayout(0, 2, 0, 0));
@@ -497,8 +503,7 @@ public class ControlPanel extends JFrame {
 		btnNewButton.setForeground(Color.WHITE);
 		manageAccounts1.add(btnNewButton);
 		
-		btnNewButton.addActionListener(e -> openCreateAccountDialog(tableModel));
-
+		btnNewButton.addActionListener(e -> controller.openCreateAccountDialog(tableModel));
 
 		JButton btnEdit = new JButton("✏️ Edit");
 		btnEdit.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
@@ -507,94 +512,7 @@ public class ControlPanel extends JFrame {
 		btnEdit.setForeground(Color.BLACK);
 		manageAccounts1.add(btnEdit);
 		
-		
-		btnEdit.addActionListener(e -> {
-		    int selectedRow = table.getSelectedRow();
-
-		    if (selectedRow == -1) {
-		        JOptionPane.showMessageDialog(null, "Please select a row to edit.", "No Selection", JOptionPane.WARNING_MESSAGE);
-		        return;
-		    }
-
-		    String accountNumber = table.getValueAt(selectedRow, 0).toString();
-		    BankLedger bankLedger = BankLedger.getInstance();
-		    Account selectedAccount = bankLedger.getAccountByNumber(accountNumber);
-
-		    if (selectedAccount == null) {
-		        JOptionPane.showMessageDialog(null, "Account not found.", "Error", JOptionPane.ERROR_MESSAGE);
-		        return;
-		    }
-
-		    Customer owner = selectedAccount.getOwner();
-
-		    // Create input fields pre-filled with current data
-		    JTextField nameField = new JTextField(owner.getName());
-		    JTextField contactField = new JTextField(owner.getContactNumber());
-		    JPasswordField passwordField = new JPasswordField(owner.getPassword());
-
-		    Dimension fieldSize = new Dimension(200, 25);
-		    nameField.setPreferredSize(fieldSize);
-		    contactField.setPreferredSize(fieldSize);
-		    passwordField.setPreferredSize(fieldSize);
-
-		    // Create inner grid layout for form
-		    JPanel formGrid = new JPanel(new GridLayout(4, 2, 10, 10));
-		    formGrid.add(new JLabel("Name:"));
-		    formGrid.add(nameField);
-		    formGrid.add(new JLabel("Contact Number:"));
-		    formGrid.add(contactField);
-		    formGrid.add(new JLabel("Password:"));
-		    formGrid.add(passwordField);
-
-		    // Wrap with GridBagLayout for centering and padding
-		    JPanel formPanel = new JPanel(new GridBagLayout());
-		    formPanel.setBorder(BorderFactory.createTitledBorder("Edit Account Information"));
-
-		    GridBagConstraints gbc = new GridBagConstraints();
-		    gbc.gridx = 0;
-		    gbc.gridy = 0;
-		    gbc.insets = new Insets(10, 10, 10, 10);
-		    formPanel.add(formGrid, gbc);
-
-		    nameField.requestFocusInWindow();
-
-		    int result = JOptionPane.showConfirmDialog(
-		            null,
-		            formPanel,
-		            "Edit Account Details",
-		            JOptionPane.OK_CANCEL_OPTION,
-		            JOptionPane.PLAIN_MESSAGE
-		    );
-
-		    if (result == JOptionPane.OK_OPTION) {
-		        String newName = nameField.getText().trim();
-		        String newContact = contactField.getText().trim();
-		        String newPassword = new String(passwordField.getPassword()).trim();
-
-		        if (newName.isEmpty() || newContact.isEmpty() || newPassword.isEmpty()) {
-		            JOptionPane.showMessageDialog(null, "All fields must be filled.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-		            return;
-		        }
-
-		        if (!newContact.matches("\\d{10,11}")) {
-		            JOptionPane.showMessageDialog(null, "Invalid contact number (must be 10 or 11 digits).", "Validation Error", JOptionPane.ERROR_MESSAGE);
-		            return;
-		        }
-
-		        owner.setName(newName);
-		        owner.setContactNumber(newContact);
-		        owner.setPassword(newPassword);
-
-		        table.setValueAt(newName, selectedRow, 1);
-		        table.setValueAt(newContact, selectedRow, 3);
-		        table.setValueAt(newPassword, selectedRow, 5);
-
-		        JOptionPane.showMessageDialog(null, "Account details updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-		    }
-		});
-
-
-
+		btnEdit.addActionListener(e -> controller.openEditAccountDialog(tableModel, table));
 
 
 		JButton btnDelete = new JButton("🗑️ Delete");
@@ -603,6 +521,40 @@ public class ControlPanel extends JFrame {
 		btnDelete.setBackground(new Color(220, 53, 69)); // Red
 		btnDelete.setForeground(Color.WHITE);
 		manageAccounts1.add(btnDelete);
+		
+
+		btnDelete.addActionListener(e -> {
+		    int selectedRow = table.getSelectedRow();
+
+		    if (selectedRow == -1) {
+		        JOptionPane.showMessageDialog(null, "Please select a row to delete.", "No Selection", JOptionPane.WARNING_MESSAGE);
+		        return;
+		    }
+
+		    String accountNumber = table.getValueAt(selectedRow, 0).toString();
+
+		    int confirm = JOptionPane.showConfirmDialog(
+		        null,
+		        "Are you sure you want to delete this account?\nThis action cannot be undone.",
+		        "Confirm Deletion",
+		        JOptionPane.YES_NO_OPTION,
+		        JOptionPane.WARNING_MESSAGE
+		    );
+
+		    if (confirm == JOptionPane.YES_OPTION) {
+		        boolean success = controller.deleteAccountByNumber(accountNumber);
+
+		        if (success) {
+		            ((DefaultTableModel) table.getModel()).removeRow(selectedRow);
+		            JOptionPane.showMessageDialog(null, "Account deleted successfully.", "Deleted", JOptionPane.INFORMATION_MESSAGE);
+		        } else {
+		            JOptionPane.showMessageDialog(null, "Account not found.", "Error", JOptionPane.ERROR_MESSAGE);
+		        }
+		    }
+		});
+
+
+
 
 		// Search Field and Buttons
 		textField = new JTextField();
@@ -617,6 +569,36 @@ public class ControlPanel extends JFrame {
 		btnSearch.setBackground(new Color(0, 123, 255)); // Blue
 		btnSearch.setForeground(Color.WHITE);
 		manageAccounts1.add(btnSearch);
+		
+		btnSearch.addActionListener(e -> {
+		    String keyword = textField.getText().trim().toLowerCase();
+
+		    if (keyword.isEmpty()) {
+		        JOptionPane.showMessageDialog(null, "Please enter a keyword to search.", "Empty Search", JOptionPane.WARNING_MESSAGE);
+		        return;
+		    }
+
+		    DefaultTableModel model = (DefaultTableModel) table.getModel();
+		    TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(model);
+		    table.setRowSorter(sorter);
+
+		    // Filters rows that contain the keyword in *any column*
+		    RowFilter<DefaultTableModel, Object> filter = new RowFilter<>() {
+		        @Override
+		        public boolean include(Entry<? extends DefaultTableModel, ? extends Object> entry) {
+		            for (int i = 0; i < entry.getValueCount(); i++) {
+		                Object value = entry.getValue(i);
+		                if (value != null && value.toString().toLowerCase().contains(keyword)) {
+		                    return true;
+		                }
+		            }
+		            return false;
+		        }
+		    };
+
+		    sorter.setRowFilter(filter);
+		});
+
 
 		// Refresh Button
 		JButton btnRefresh = new JButton("🔄 Refresh");
@@ -626,7 +608,12 @@ public class ControlPanel extends JFrame {
 		btnRefresh.setForeground(Color.WHITE);
 		manageAccounts1.add(btnRefresh);
 		btnRefresh.addActionListener(e -> {
-			updateTransactionTable(tableModel);
+			textField.setText("");
+		    TableRowSorter<?> sorter = (TableRowSorter<?>) table.getRowSorter();
+		    if (sorter != null) {
+		        sorter.setRowFilter(null); // Remove the filter
+		    }
+		    updateAccountsTable(tableModel);
 		});
 
 
@@ -643,7 +630,7 @@ public class ControlPanel extends JFrame {
 
 		// --- HEADER ---
 		JPanel montlyTransactionheaderpanel = new JPanel();
-		montlyTransactionheaderpanel.setBounds(0, 0, 916, 72);
+		montlyTransactionheaderpanel.setBounds(0, 0, 959, 72);
 		montlyTransactionheaderpanel.setBackground(new Color(52, 58, 64)); // Darker header (professional)
 		montlyTransactionheaderpanel.setPreferredSize(new Dimension(0, 80));
 		montlyTransactionheaderpanel.setLayout(new GridLayout(0, 2, 0, 0));
@@ -662,7 +649,7 @@ public class ControlPanel extends JFrame {
 
 		// Table Panel with JTable
 		tablePanel = new JPanel();
-		tablePanel.setBounds(50, 100, 816, 479); // Adjust height as needed
+		tablePanel.setBounds(10, 100, 939, 479); // Adjust height as needed
 		tablePanel.setLayout(new BorderLayout());
 
 		String[] monthlyTransactionHeaders = {"Date", "Name", "ID", "Amount", "Type", "Balance"};
@@ -795,15 +782,50 @@ public class ControlPanel extends JFrame {
 		accountLabel.setBounds(450, 628, 140, 30);
 		accountLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
 		montlyTransactionSummaryPanel1.add(accountLabel);
+		
+		List<String> accountList = new ArrayList<>();
+
+		for (Account account : customers) {
+		    String displayText = account.getOwner().getName() + " - "  + account.getAccountNumber() + " - " + account.getAccountType();
+		    accountList.add(displayText);
+		}
+
+		// Sort alphabetically
+		Collections.sort(accountList);
 
 		// Assuming 'customers' is a List<Account> containing all the customer accounts
 		JComboBox<String> accountDropdown = new JComboBox<>();
-		for (Account account : customers) {
-			accountDropdown.addItem(account.getOwner().getName()); // You can add more identifiers like account number if needed
+		for (String accountDisplay : accountList) {
+			accountDropdown.addItem(accountDisplay);
 		}
 		accountDropdown.setBounds(590, 628, 220, 30);
 		accountDropdown.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
 		montlyTransactionSummaryPanel1.add(accountDropdown);
+		
+		JButton btnRefresh_1 = new JButton("🔄 Refresh");
+		btnRefresh_1.setForeground(Color.WHITE);
+		btnRefresh_1.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
+		btnRefresh_1.setBackground(new Color(108, 117, 125));
+		btnRefresh_1.setBounds(590, 668, 120, 35);
+		montlyTransactionSummaryPanel1.add(btnRefresh_1);
+		
+		btnRefresh_1.addActionListener(e -> {
+			refreshTransactionsTable(tableModel1);
+			accountDropdown.removeAllItems(); 
+			List<String> accountList1 = new ArrayList<>();
+
+			for (Account account : customers) {
+			    String displayText = account.getOwner().getName() + " - " + account.getAccountNumber() + " - " + account.getAccountType();
+			    accountList1.add(displayText);
+			}
+
+			// Sort alphabetically
+			Collections.sort(accountList1);
+			for (String accountDisplay : accountList1) {
+				accountDropdown.addItem(accountDisplay);  
+			}
+		});
+
 
 		// Generate Report Button
 		JButton submitBtn = new JButton();
@@ -821,6 +843,8 @@ public class ControlPanel extends JFrame {
 			Date fromDateValue = (Date) fromDateSpinner.getValue();
 			Date toDateValue = (Date) toDateSpinner.getValue();
 			String selectedAccountName = (String) accountDropdown.getSelectedItem();
+			
+			
 
 			if (selectedOption.equals("Select Option")) {
 				JOptionPane.showMessageDialog(montlyTransactionSummaryPanel1, "Please select a date range option.");
@@ -847,15 +871,25 @@ public class ControlPanel extends JFrame {
 				}
 
 				Account selectedAccount = null;
-				// If an account is selected from the dropdown, filter the report by that account
+				
 				if (selectedAccountName != null && !selectedAccountName.isEmpty()) {
-					// Find the selected account based on the account name
-					for (Account account : customers) {
-						if (account.getOwner().getName().equals(selectedAccountName)) {
-							selectedAccount = account;
-							break;
-						}
-					}
+				    String[] parts = selectedAccountName.split(" - ");
+				    if (parts.length == 3) {
+				        String selectedName = parts[0];
+				        String selectedNumber = parts[1];
+				        String selectedType = parts[2];
+
+				        for (Account account : customers) {
+				            if (
+				                account.getOwner().getName().equals(selectedName) &&
+				                account.getAccountNumber().equals(selectedNumber) &&
+				                account.getAccountType().equals(selectedType)
+				            ) {
+				                selectedAccount = account;
+				                break;
+				            }
+				        }
+				    }
 				}
 
 				if (selectedAccount != null) {
@@ -873,6 +907,8 @@ public class ControlPanel extends JFrame {
 
 			} catch (DateTimeParseException ex) {
 				JOptionPane.showMessageDialog(montlyTransactionSummaryPanel1, "Invalid date format. Please use MM/dd/yyyy.");
+				
+				
 
 
 			}
@@ -905,7 +941,7 @@ public class ControlPanel extends JFrame {
 
 		// --- HEADER ---
 		JPanel dailyTransactionheaderpanel = new JPanel();
-		dailyTransactionheaderpanel.setBounds(0, 0, 916, 72);
+		dailyTransactionheaderpanel.setBounds(0, 0, 959, 72);
 		dailyTransactionheaderpanel.setBackground(new Color(52, 58, 64));
 		dailyTransactionheaderpanel.setPreferredSize(new Dimension(0, 80));
 		dailyTransactionheaderpanel.setLayout(new GridLayout(0, 2, 0, 0));
@@ -1009,7 +1045,7 @@ public class ControlPanel extends JFrame {
 
 		// ScrollPane for table
 		JScrollPane scrollPane = new JScrollPane(table);
-		scrollPane.setBounds(24, 170, 847, 556);
+		scrollPane.setBounds(10, 170, 939, 556);
 		dailyTransactionReport1.add(scrollPane);
 
         
@@ -1026,7 +1062,7 @@ public class ControlPanel extends JFrame {
 
         // --- HEADER ---
         JPanel manageTransactionheaderpanel1 = new JPanel();
-        manageTransactionheaderpanel1.setBounds(0, 0, 916, 72);
+        manageTransactionheaderpanel1.setBounds(0, 0, 959, 72);
         manageTransactionheaderpanel1.setBackground(new Color(52, 58, 64));
         manageTransactionheaderpanel1.setPreferredSize(new Dimension(0, 80));
         manageTransactionheaderpanel1.setLayout(new GridLayout(0, 2, 0, 0));
@@ -1074,6 +1110,8 @@ public class ControlPanel extends JFrame {
                 return c;
             }
         });
+        loadManageTransactions(tableModel111, customers);
+
 
         // Add the scroll pane
         JTableHeader header111 = manageTable.getTableHeader();
@@ -1090,37 +1128,21 @@ public class ControlPanel extends JFrame {
      // --- Action Buttons (Create, Edit, Delete, Search) ---
         JButton btnCreateTrans = new JButton("➕ Create New");
         btnCreateTrans.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
-        btnCreateTrans.setBounds(50, 90, 160, 45);
+        btnCreateTrans.setBounds(121, 105, 160, 45);
         btnCreateTrans.setBackground(new Color(40, 167, 69)); // Green
         btnCreateTrans.setForeground(Color.WHITE);
         manageTransactionPanel1.add(btnCreateTrans);
+        btnCreateTrans.addActionListener(e -> {controller.openCreateTransactionDialog(tableModel111);
+        	refreshTransactionsTable(tableModel111);
+        });
+        
 
         JButton btnEditTrans = new JButton("✏️ Edit");
         btnEditTrans.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
-        btnEditTrans.setBounds(230, 90, 120, 45);
+        btnEditTrans.setBounds(340, 105, 120, 45);
         btnEditTrans.setBackground(new Color(255, 193, 7)); // Yellow
         btnEditTrans.setForeground(Color.BLACK);
         manageTransactionPanel1.add(btnEditTrans);
-
-        JButton btnDeleteTrans = new JButton("🗑️ Delete");
-        btnDeleteTrans.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
-        btnDeleteTrans.setBounds(370, 90, 130, 45);
-        btnDeleteTrans.setBackground(new Color(220, 53, 69)); // Red
-        btnDeleteTrans.setForeground(Color.WHITE);
-        manageTransactionPanel1.add(btnDeleteTrans);
-
-        JTextField searchTransactionField = new JTextField();
-        searchTransactionField.setBounds(520, 90, 220, 45);
-        searchTransactionField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        searchTransactionField.setToolTipText("Search by name, ID, or type");
-        manageTransactionPanel1.add(searchTransactionField);
-
-        JButton btnSearchTrans = new JButton("🔍 Search");
-        btnSearchTrans.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
-        btnSearchTrans.setBounds(750, 90, 115, 45);
-        btnSearchTrans.setBackground(new Color(0, 123, 255)); // Blue
-        btnSearchTrans.setForeground(Color.WHITE);
-        manageTransactionPanel1.add(btnSearchTrans);
 
         // --- Redesigned Sort Section and Type Filters ---
         JLabel lblSortBy1 = new JLabel("Sort By:");
@@ -1159,6 +1181,18 @@ public class ControlPanel extends JFrame {
         generateReportBtn.setBackground(new Color(100, 180, 255));
         generateReportBtn.setBounds(691, 645, 170, 30);
         manageTransactionPanel1.add(generateReportBtn);
+        
+        JButton btnRefresh_2 = new JButton("🔄 Refresh");
+        btnRefresh_2.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		loadManageTransactions(tableModel111, customers);
+        	}
+        });
+        btnRefresh_2.setForeground(Color.WHITE);
+        btnRefresh_2.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 13));
+        btnRefresh_2.setBackground(new Color(108, 117, 125));
+        btnRefresh_2.setBounds(740, 115, 120, 35);
+        manageTransactionPanel1.add(btnRefresh_2);
 
 
      		
@@ -1219,18 +1253,51 @@ public class ControlPanel extends JFrame {
       		});
 
 	}
+	
+	private void refreshTransactionsTable(DefaultTableModel tableModel1) {
+		tableModel1.setRowCount(0); // Clear existing rows
+		Bank bank = BankLedger.getInstance().getBank();
+		List<Account> customers =  bank.getAllAccounts();
+		for (Account account : customers) {
+			java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
 
-	private void stylePrimaryButton(JButton btn) {
-        btn.setBackground(new Color(0, 123, 255));
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-    }
+			for (Transaction transaction : transactions) {
+				String date = transaction.getDate().toString();
+				String iD = account.getAccountNumber();
+				String type = transaction.getAction();
+				String amount = String.format("₱%.2f", transaction.getAmount());
+				String recipient = account.getOwner().getName();
+
+				double balance;
+				if (account instanceof LoanAccount) {
+					balance = ((LoanAccount) account).getLoanBalance();
+				} else {
+					balance = account.getBalance();
+				}
+
+				// Adjust for transfer descriptions
+				if (type.startsWith("Transfer to ")) {
+					recipient = type.substring(12);
+					type = "Transfer Sent";
+				} else if (type.startsWith("Transfer from ")) {
+					recipient = type.substring(14);
+					type = "Transfer Received";
+				}
+
+				tableModel1.addRow(new Object[]{
+					date,
+					recipient,
+					iD,
+					amount,
+					type,
+					String.format("₱%.2f", balance)
+				});
+			}
+		}
+	}
 
 
-
-
-	public void updateTransactionTable(DefaultTableModel tableModel) {
+	public void updateAccountsTable(DefaultTableModel tableModel) {
 		Bank bank = BankLedger.getInstance().getBank();
 		List<Account> customers =  bank.getAllAccounts();
 		tableModel.setRowCount(0); // Clear existing rows
@@ -1240,13 +1307,10 @@ public class ControlPanel extends JFrame {
 			String name = account.getOwner().getName();
 			String email = account.getOwner().getEmail();
 			String contact = account.getOwner().getContactNumber();
-			String address = account.getOwner().getAddress();
 			String accountType = account.getAccountType();
 			String password = account.getOwner().getPassword();
-			JButton generateButton = new JButton("Generate");
-			generateButton.setMargin(new Insets(10, 20, 10, 20));
 			// Add row to table
-			tableModel.addRow(new Object[]{accountNumber, name, email, contact, address, accountType, password, generateButton});
+			tableModel.addRow(new Object[]{accountNumber, name, email, contact, accountType, password, "Generate"});
 		}
 	}
 
@@ -1271,211 +1335,30 @@ public class ControlPanel extends JFrame {
 		return customers.get(row); // Return the account based on the row index
 	}
 	
-	private void openCreateAccountDialog(DefaultTableModel tableModel) {
-	    // Fields
-	    JTextField nameField = new JTextField(20);
-	    JSpinner dobSpinner = new JSpinner(new SpinnerDateModel());
-	    dobSpinner.setEditor(new JSpinner.DateEditor(dobSpinner, "yyyy-MM-dd"));
-	    JTextField emailField = new JTextField(20);
-	    JTextField contactField = new JTextField(15);
-	    JTextField addressField = new JTextField(30);
-	    JPasswordField passwordField = new JPasswordField(20);
-	    JPasswordField confirmPasswordField = new JPasswordField(20);
-	    String[] accountTypes = {"Checking", "Savings", "Loan"};
-	    JComboBox<String> accountTypeBox = new JComboBox<>(accountTypes);
-	    JLabel lblInitial = new JLabel("Initial Deposit:");
-	    JTextField initialAmountField = new JTextField(10);
+	public void loadManageTransactions(DefaultTableModel tableModel111, List<Account> customers) {
+	    tableModel111.setRowCount(0); // Clear existing rows
 
-	    // Tooltips
-	    nameField.setToolTipText("Full legal name");
-	    emailField.setToolTipText("example@gmail.com");
-	    contactField.setToolTipText("10-11 digit phone number");
-	    addressField.setToolTipText("Complete address");
-	    passwordField.setToolTipText("Enter a secure password");
-	    confirmPasswordField.setToolTipText("Re-enter password");
-	    initialAmountField.setToolTipText("Amount to deposit or borrow");
+	    for (Account account : customers) {
+	        List<Transaction> transactions = account.getHistory().getHistoryList();
 
-	    // Dynamic label switcher
-	    accountTypeBox.addActionListener(e -> {
-	        String selected = (String) accountTypeBox.getSelectedItem();
-	        lblInitial.setText("Loan".equalsIgnoreCase(selected) ? "Borrow Amount:" : "Initial Deposit:");
-	    });
+	        for (Transaction transaction : transactions) {
+	            String date = transaction.getDate().toString();
+	            String id = account.getAccountNumber();
+	            String name = account.getOwner().getName();
+	            String amount = String.format("₱%.2f", transaction.getAmount());
+	            String status = transaction.getAction();
 
-	    // Panels
-	    JPanel personalPanel = new JPanel(new GridLayout(0, 2, 5, 5));
-	    personalPanel.setBorder(BorderFactory.createTitledBorder("Personal Information"));
-	    personalPanel.add(new JLabel("Name:"));
-	    personalPanel.add(nameField);
-	    personalPanel.add(new JLabel("Date of Birth:"));
-	    personalPanel.add(dobSpinner);
-	    personalPanel.add(new JLabel("Email:"));
-	    personalPanel.add(emailField);
-	    personalPanel.add(new JLabel("Contact Number:"));
-	    personalPanel.add(contactField);
-	    personalPanel.add(new JLabel("Address:"));
-	    personalPanel.add(addressField);
-	    personalPanel.add(new JLabel("Password:"));
-	    personalPanel.add(passwordField);
-	    personalPanel.add(new JLabel("Confirm Password:"));
-	    personalPanel.add(confirmPasswordField);
-
-	    JPanel accountPanel = new JPanel(new GridLayout(0, 2, 5, 5));
-	    accountPanel.setBorder(BorderFactory.createTitledBorder("Account Details"));
-	    accountPanel.add(new JLabel("Account Type:"));
-	    accountPanel.add(accountTypeBox);
-	    accountPanel.add(lblInitial);
-	    accountPanel.add(initialAmountField);
-
-	    JPanel contentPanel = new JPanel();
-	    contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-	    contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-	    contentPanel.add(personalPanel);
-	    contentPanel.add(Box.createVerticalStrut(10));
-	    contentPanel.add(accountPanel);
-
-	    int result = JOptionPane.showConfirmDialog(null, contentPanel, "Create New Account",
-	            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-	    if (result == JOptionPane.OK_OPTION) {
-	        String name = nameField.getText().trim();
-	        Date dobDate = (Date) dobSpinner.getValue();
-	        String dob = new SimpleDateFormat("yyyy-MM-dd").format(dobDate);
-	        String email = emailField.getText().trim();
-	        String contact = contactField.getText().trim();
-	        String address = addressField.getText().trim();
-	        String password = new String(passwordField.getPassword()).trim();
-	        String confirmPassword = new String(confirmPasswordField.getPassword()).trim();
-	        String type = (String) accountTypeBox.getSelectedItem();
-	        String initialAmountStr = initialAmountField.getText().trim();
-
-	        // Validation
-	        if (name.isEmpty() || dob.isEmpty() || email.isEmpty() || contact.isEmpty() ||
-	                address.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() || initialAmountStr.isEmpty()) {
-	            JOptionPane.showMessageDialog(null, "All fields must be filled.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-	            return;
-	        }
-
-	        if (!email.contains("@") || !email.contains(".com")) {
-	            JOptionPane.showMessageDialog(null, "Invalid email format.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-	            return;
-	        }
-
-	        if (!contact.matches("\\d{10,11}")) {
-	            JOptionPane.showMessageDialog(null, "Invalid contact number (must be 10 or 11 digits).", "Validation Error", JOptionPane.ERROR_MESSAGE);
-	            return;
-	        }
-
-	        if (!password.equals(confirmPassword)) {
-	            JOptionPane.showMessageDialog(null, "Passwords do not match.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-	            return;
-	        }
-
-	        double initialAmount;
-	        try {
-	            initialAmount = Double.parseDouble(initialAmountStr);
-	            if (initialAmount < 0) throw new NumberFormatException();
-	        } catch (NumberFormatException e) {
-	            JOptionPane.showMessageDialog(null, "Invalid amount. Enter a valid positive number.", "Validation Error", JOptionPane.ERROR_MESSAGE);
-	            return;
-	        }
-
-	        Bank bank = BankLedger.getInstance().getBank();
-	        Customer existingCustomer = bank.findCustomerByEmail(email);
-
-	        if (existingCustomer != null) {
-	            int choice = JOptionPane.showConfirmDialog(null,
-	                    "An account already exists with this email. Open a new account under the same user?",
-	                    "Duplicate Email", JOptionPane.YES_NO_OPTION);
-
-	            if (choice == JOptionPane.YES_OPTION) {
-	                boolean hasSameType = existingCustomer.getAccount().stream()
-	                        .anyMatch(acc -> acc.getAccountType().equalsIgnoreCase(type));
-
-	                if (hasSameType) {
-	                    JOptionPane.showMessageDialog(null,
-	                            "This customer already has a " + type + " account.",
-	                            "Duplicate Account Type", JOptionPane.WARNING_MESSAGE);
-	                    return;
-	                }
-
-	                Account newAccount = AccountFactory.createAccount(type, existingCustomer);
-
-	                if ("Loan".equalsIgnoreCase(type)) {
-	                    ((LoanAccount) newAccount).borrow(initialAmount);
-	                    newAccount.addNotification(new Notification("Loan Granted",
-	                            "You borrowed PHP " + initialAmount + " as your starting loan.",
-	                            LocalDate.now().toString()));
-	                } else {
-	                    newAccount.deposit(initialAmount);
-	                    newAccount.addNotification(new Notification("Initial Deposit Completed",
-	                            "You deposited PHP " + initialAmount + " as initial deposit.",
-	                            LocalDate.now().toString()));
-	                }
-
-	                bank.addAccount(newAccount);
-	                existingCustomer.addAccount(newAccount);
-	                newAccount.addObserver(new LowBalanceNotifier());
-
-	                tableModel.addRow(new Object[]{
-	                        newAccount.getAccountNumber(),
-	                        existingCustomer.getName(),
-	                        email,
-	                        contact,
-	                        address,
-	                        type,
-	                        new JButton("Generate")
-	                });
-
-	                JOptionPane.showMessageDialog(null, "New account added to existing customer.", "Success", JOptionPane.INFORMATION_MESSAGE);
-	                return;
-	            } else {
-	                return;
+	            // Normalize transfer types
+	            if (status.startsWith("Transfer to ")) {
+	                status = "Transfer Sent";
+	            } else if (status.startsWith("Transfer from ")) {
+	                status = "Transfer Received";
 	            }
+
+	            tableModel111.addRow(new Object[]{
+	                date, id, name, amount, status
+	            });
 	        }
-
-	        // New customer
-	        Customer newCustomer = new Customer(name, dob, contact, email, address, password);
-	        Account newAccount;
-
-	        try {
-	            newAccount = AccountFactory.createAccount(type, newCustomer);
-	            if ("Loan".equalsIgnoreCase(type)) {
-	                ((LoanAccount) newAccount).borrow(initialAmount);
-	                newAccount.addNotification(new Notification("Loan Granted",
-	                        "You borrowed PHP " + initialAmount + " as your starting loan.",
-	                        LocalDate.now().toString()));
-	            } else {
-	                newAccount.deposit(initialAmount);
-	                newAccount.addNotification(new Notification("Initial Deposit Completed",
-	                        "You deposited PHP " + initialAmount + " as initial deposit.",
-	                        LocalDate.now().toString()));
-	            }
-	        } catch (IllegalArgumentException ex) {
-	            JOptionPane.showMessageDialog(null, ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-	            return;
-	        }
-
-	        BankLedger.getInstance().addAccount(newAccount);
-	        newCustomer.addAccount(newAccount);
-	        newAccount.addObserver(new LowBalanceNotifier());
-
-	        tableModel.addRow(new Object[]{
-	                newAccount.getAccountNumber(),
-	                name,
-	                email,
-	                contact,
-	                address,
-	                type,
-	                new JButton("Generate")
-	        });
-
-	        JOptionPane.showMessageDialog(null, "New account created successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
 	    }
 	}
-
-
-
-
-
-
 }
