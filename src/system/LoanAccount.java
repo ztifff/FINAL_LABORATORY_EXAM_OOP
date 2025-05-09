@@ -1,5 +1,9 @@
 package system;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.JOptionPane;
 
 public class LoanAccount extends Account {
@@ -44,16 +48,23 @@ public class LoanAccount extends Account {
 		loanBalance -= amount;
 
 		getHistory().addTransaction(new Transaction("Loan Repayment", amount, java.time.LocalDate.now()));
-		
-		// Add notification
-	    Notification repaymentNotification = new Notification(
-	        "Loan Repayment Received",
-	        "Your loan account received a repayment of PHP " + String.format("%.2f", amount),
-	        java.time.LocalDate.now().toString()
-	    );
-	    this.addNotification(repaymentNotification);
 		notifyObservers();
 		return true;
+	}
+	
+	public List<Transaction> getTransactionsBetween(LocalDate startDate, LocalDate endDate, Account account) {
+	    List<Transaction> allTransactions = account.getHistory().getHistoryList();
+	    List<Transaction> filtered = new ArrayList<>();
+
+	    for (Transaction t : allTransactions) {
+	        LocalDate date = t.getDate();
+	        if ((date.isEqual(startDate) || date.isAfter(startDate)) &&
+	            (date.isEqual(endDate) || date.isBefore(endDate))) {
+	            filtered.add(t);
+	        }
+	    }
+
+	    return filtered;
 	}
 
 	@Override

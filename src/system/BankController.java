@@ -38,7 +38,7 @@ public class BankController {
     public void openCreateTransactionDialog(DefaultTableModel tableModel) {
         JTextField accountNumberField = new JTextField();
         JTextField amountField = new JTextField();
-        String[] transactionTypes = {"Deposit", "Withdraw", "Transfer"};
+        String[] transactionTypes = {"Deposit", "Withdraw", "Transfer", "Loan Repayment", "Borrow"};
         JComboBox<String> typeDropdown = new JComboBox<>(transactionTypes);
 
         JPanel panel = new JPanel(new GridLayout(0, 1));
@@ -65,16 +65,30 @@ public class BankController {
                 if (selectedAccount != null) {
                     switch (type) {
                         case "Deposit":
+                        	if (selectedAccount instanceof LoanAccount) {
+                                JOptionPane.showMessageDialog(null, "You cannot directly use Deposit in Loan use Loan Repayment");
+                                return;
+                            }
                             selectedAccount.deposit(amount);
                             selectedAccount.addNotification(new Notification(
                                     "Deposit Made", "You deposited PHP " + amount, LocalDate.now().toString()));
                             break;
+
                         case "Withdraw":
+                        	if (selectedAccount instanceof LoanAccount) {
+                                JOptionPane.showMessageDialog(null, "You cannot directly use Withdraw in Loan use Borrow");
+                                return;
+                            }
                             selectedAccount.withdraw(amount);
                             selectedAccount.addNotification(new Notification(
                                     "Withdrawal Made", "You withdrew PHP " + amount, LocalDate.now().toString()));
                             break;
+
                         case "Transfer":
+                            if (selectedAccount instanceof LoanAccount) {
+                                JOptionPane.showMessageDialog(null, "Loan accounts cannot transfer money to others.");
+                                return;
+                            }
                             String recipient = JOptionPane.showInputDialog("Enter recipient account number:");
                             Account recipientAccount = bankLedger.getAccountByNumber(recipient);
                             if (recipientAccount != null) {
@@ -88,9 +102,53 @@ public class BankController {
                                 return;
                             }
                             break;
+
+                        case "Loan Repayment":
+                            Account loanAcc = bankLedger.getAccountByNumber(accNum);
+
+                            if (loanAcc == null || !(loanAcc instanceof LoanAccount)) {
+                                JOptionPane.showMessageDialog(null, "Loan account not found.");
+                                return;
+                            }
+
+                            // Get the payer (selectedAccount) and the recipient (loanAccount)
+                            LoanAccount loanAccount = (LoanAccount) loanAcc;
+
+                            if (loanAccount.getLoanBalance() < amount) {
+                                JOptionPane.showMessageDialog(null, "Insufficient balance for repayment.");
+                                return;
+                            }
+
+                            boolean success = loanAccount.repayLoan(amount);
+
+                            if (success) {
+
+                                selectedAccount.addNotification(new Notification(
+                                        "Loan Repayment Sent",
+                                        "You repaid PHP " + amount + " to loan account " + accNum,
+                                        LocalDate.now().toString()));
+
+                                loanAccount.addNotification(new Notification(
+                                        "Loan Repayment Received",
+                                        "Your loan account received PHP " + amount + " from " + selectedAccount.getAccountNumber(),
+                                        LocalDate.now().toString()));
+                            }
+                            break;
+                        case "Borrow":
+                            if (selectedAccount instanceof LoanAccount) {
+                                LoanAccount loanAccount1 = (LoanAccount) selectedAccount;
+                                loanAccount1.borrow(amount);
+                                selectedAccount.addNotification(new Notification(
+                                        "Loan Borrowed", "You borrowed PHP " + amount + " from your loan account.", LocalDate.now().toString()));
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Only loan accounts can borrow money.");
+                                return;
+                            }
+                            break;
                     }
 
                     JOptionPane.showMessageDialog(null, "Transaction successful!");
+
                 } else {
                     JOptionPane.showMessageDialog(null, "Account not found.");
                 }
@@ -102,6 +160,7 @@ public class BankController {
             }
         }
     }
+
     
     public void openCreateAccountDialog(DefaultTableModel tableModel) {
         JTextField nameField = new JTextField(20);
@@ -283,6 +342,36 @@ public class BankController {
         return false;
     }
     
+    public void openDeleteAccountDialog(DefaultTableModel tableModel, JTable table) {
+    	int selectedRow = table.getSelectedRow();
+
+	    if (selectedRow == -1) {
+	        JOptionPane.showMessageDialog(null, "Please select a row to delete.", "No Selection", JOptionPane.WARNING_MESSAGE);
+	        return;
+	    }
+
+	    String accountNumber = table.getValueAt(selectedRow, 0).toString();
+
+	    int confirm = JOptionPane.showConfirmDialog(
+	        null,
+	        "Are you sure you want to delete this account?\nThis action cannot be undone.",
+	        "Confirm Deletion",
+	        JOptionPane.YES_NO_OPTION,
+	        JOptionPane.WARNING_MESSAGE
+	    );
+
+	    if (confirm == JOptionPane.YES_OPTION) {
+	        boolean success = deleteAccountByNumber(accountNumber);
+
+	        if (success) {
+	            ((DefaultTableModel) table.getModel()).removeRow(selectedRow);
+	            JOptionPane.showMessageDialog(null, "Account deleted successfully.", "Deleted", JOptionPane.INFORMATION_MESSAGE);
+	        } else {
+	            JOptionPane.showMessageDialog(null, "Account not found.", "Error", JOptionPane.ERROR_MESSAGE);
+	        }
+	    }
+	}
+    
     public void openEditAccountDialog(DefaultTableModel tableModel, JTable table) {
         int selectedRow = table.getSelectedRow();
 
@@ -404,6 +493,57 @@ public class BankController {
         owner.setPassword(newPassword);
         return true;
     }
+    
+    public void openEditTransactionDialog(DefaultTableModel tableModel, JTable table) {
+        int selectedRow = table.getSelectedRow();
+
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(null, "Please select a transaction to edit.", "No Selection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // Extract transaction details
+        String date = table.getValueAt(selectedRow, 0).toString();
+        String transactionID = table.getValueAt(selectedRow, 1).toString();
+        String accountName = table.getValueAt(selectedRow, 2).toString();
+        String amountStr = table.getValueAt(selectedRow, 3).toString();
+        String status = table.getValueAt(selectedRow, 4).toString();
+
+        JTextField amountField = new JTextField(amountStr);
+
+        amountField.setPreferredSize(new Dimension(250, 28));
+
+        JPanel formPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        formPanel.setBorder(BorderFactory.createTitledBorder("Edit Transaction"));
+
+        formPanel.add(new JLabel("Transaction Amount:"));
+        formPanel.add(amountField);
+
+        int result = JOptionPane.showConfirmDialog(
+            null,
+            formPanel,
+            "Edit Transaction",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result == JOptionPane.OK_OPTION) {
+        	String cleanAmountStr = amountField.getText().replace("₱", "").replace(",", "").trim();
+
+            try {
+            	double newAmount = Double.parseDouble(cleanAmountStr);
+
+                // You would likely update this in your model or data store
+            	tableModel.setValueAt("₱" + String.format("%.2f", newAmount), selectedRow, 3);
+
+                JOptionPane.showMessageDialog(null, "Transaction updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Invalid amount entered.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
 
     public List<Account> getAllAccounts() {
         return bankLedger.getAllAccounts();

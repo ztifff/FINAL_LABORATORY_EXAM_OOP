@@ -1,5 +1,6 @@
 package system;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,6 +46,31 @@ public class ReportGenerator {
 
         return report.toString();
     }
+    
+    public static String generateLoanTransactionSummary(Account account, LocalDate startDate, LocalDate endDate) {
+        if (!(account instanceof LoanAccount)) {
+            return "Not a loan account.";
+        }
+
+        LoanAccount loan = (LoanAccount) account;
+        List<Transaction> transactions = loan.getTransactionsBetween(startDate, endDate, account);
+
+        StringBuilder report = new StringBuilder("Loan Account Summary:\n");
+        report.append("Account Number: ").append(account.getAccountNumber()).append("\n");
+        report.append("Owner: ").append(account.getOwner().getName()).append("\n");
+        report.append("Date Range: ").append(startDate).append(" to ").append(endDate).append("\n\n");
+
+        if (transactions.isEmpty()) {
+            report.append("No loan transactions (borrow or repay) in this period.");
+        } else {
+            for (Transaction tx : transactions) {
+                report.append(tx.getDate()).append(" - ").append(tx.getAction()).append(": PHP ").append(tx.getAmount()).append("\n");
+            }
+        }
+
+        return report.toString();
+    }
+
 
     public static String generateAccountBalanceReport(Account account) {
         StringBuilder report = new StringBuilder();

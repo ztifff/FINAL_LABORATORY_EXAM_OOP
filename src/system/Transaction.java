@@ -6,6 +6,7 @@ public class Transaction {
 	private String action;
 	private double amount;
 	private LocalDate date;
+	private Account account;
 
 	public Transaction(String action, double amount, LocalDate date) {
 		this.action = action;
@@ -29,5 +30,9 @@ public class Transaction {
     public String toString() {
         return action + ": ₱" + amount;
     }
+	
+	public Account getAccount() {
+		return account;
+	}
 
 }

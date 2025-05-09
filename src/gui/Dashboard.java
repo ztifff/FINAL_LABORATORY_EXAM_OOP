@@ -577,31 +577,7 @@ public class Dashboard extends JFrame {
 				return c;
 			}
 		});
-
-		java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
-		tableModel.setRowCount(0); // Clear existing rows
-
-		for (Transaction transaction : transactions) {
-			String date = transaction.getDate().toString();
-			String type = transaction.getAction();
-			String amount = String.format("₱%.2f", transaction.getAmount());
-			String recipient = account.getOwner().getName(); // Default recipient
-
-			// Handle transfers
-			if (type.startsWith("Transfer to ")) {
-				recipient = type.substring(12); // Extract recipient from action text
-				type = "Transfer Sent";
-			} else if (type.startsWith("Transfer from ")) {
-				recipient = type.substring(14); // Extract recipient from action text
-				type = "Transfer Received";
-			} else if (type.startsWith("Loan Repayment from")) {
-				recipient = type.substring(20); // Extract sender's name
-		        type = "Loan Repayment";
-			}
-
-			// Add row to table
-			tableModel.addRow(new Object[]{date, type, amount, recipient});
-		}
+		updateTransactionTable(tableModel, account); 
 
 		// Table header styling
 		JTableHeader header = transactionTable.getTableHeader();
@@ -937,7 +913,7 @@ public class Dashboard extends JFrame {
 						transactionType = "Borrowed";
 					}
 				} else {
-					JOptionPane.showMessageDialog(this, "Only Borrow or Repay Loan are allowed for Loan accounts.", 
+					JOptionPane.showMessageDialog(this, "Loan accounts cannot transfer money to others.", 
 							"Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
@@ -992,23 +968,33 @@ public class Dashboard extends JFrame {
 				Account recipientAccount = bankLedger.findAccountByName(recipientAccountName);
 
 				if (transactionType.equals("Transferred")) {
-					if (recipientAccount instanceof LoanAccount) {
-						Notification repaymentNotification = new Notification(
-								"Loan Repayment Sent", 
-								"You repaid PHP " + amount + " to the loan account of " + recipientAccount.getOwner().getName() + ".", 
-								date
-								);
-						account.addNotification(repaymentNotification);
+					// Find the recipient's LoanAccount manually
+					Account recipientLoanAccount = null;
+					for (Account acc : recipientAccount.getOwner().getAccount()) {
+					    if (acc instanceof LoanAccount) {
+					        recipientLoanAccount = acc;
+					        break;
+					    }
+					}
 
-						Notification receivedLoanRepayment = new Notification(
-								"Loan Repayment Received", 
-								"Your loan account received PHP " + amount + " from " + account.getOwner().getName() + ".", 
-								date
-								);
-						recipientAccount.addNotification(receivedLoanRepayment);
+					if (recipientLoanAccount != null) {
+					    Notification repaymentNotification = new Notification(
+					        "Loan Repayment Sent",
+					        "You repaid PHP " + amount + " to the loan account of " + recipientLoanAccount.getOwner().getName() + ".",
+					        date
+					    );
+					    account.addNotification(repaymentNotification);
 
-						recentTransactionListModel.addElement("• Repaid Loan: ₱" + amount);
-					} else {
+					    Notification receivedLoanRepayment = new Notification(
+					        "Loan Repayment Received",
+					        "Your loan account received PHP " + amount + " from " + account.getOwner().getName() + ".",
+					        date
+					    );
+					    recipientLoanAccount.addNotification(receivedLoanRepayment);
+
+					    recentTransactionListModel.addElement("• Repaid Loan: ₱" + amount);
+					}
+					else {
 						Notification transferNotification = new Notification(
 								"Transfer Completed", 
 								"You transferred PHP " + amount + " to " + recipientAccount.getOwner().getName() + ".", 
@@ -1087,8 +1073,9 @@ public class Dashboard extends JFrame {
 			} else if (type.startsWith("Transfer from ")) {
 				recipient = type.substring(14); // Extract recipient from action text
 				type = "Transfer Received";
-			} else if (type.equals("Loan Repayment")) {
-
+			} else if (type.startsWith("Loan Repayment from")) {
+				recipient = type.substring(20); // Extract sender's name
+		        type = "Loan Repayment";
 			}
 
 			// Add row to table

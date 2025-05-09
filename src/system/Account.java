@@ -108,7 +108,6 @@ public class Account implements AccountSubject {
         
 
         notifyObservers();  // Notify sender observers
-        recipient.notifyObservers();  // Also notify recipient observers
 
         return true;
     }

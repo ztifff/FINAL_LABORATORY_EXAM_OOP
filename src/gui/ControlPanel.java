@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.EventObject;
 import java.util.List;
@@ -41,9 +42,12 @@ import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.RowFilter;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
 import javax.swing.SpinnerDateModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
@@ -91,6 +95,8 @@ public class ControlPanel extends JFrame {
 	private JTextField textField;
 	private JButton[] buttons;
 	private BankController controller = new BankController();
+	private Bank bank = BankLedger.getInstance().getBank();
+	private List<Account> customers = bank.getAllAccounts();
 
 	public ControlPanel(Admin admin) {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
@@ -447,24 +453,7 @@ public class ControlPanel extends JFrame {
 
 			}
 		});
-
-
-		// Fetch account data and add to table
-		Bank bank = BankLedger.getInstance().getBank();
-		List<Account> customers = bank.getAllAccounts();
-		tableModel.setRowCount(0); // Clear existing rows
-
-		for (Account account : customers) {
-			String accountNumber = account.getAccountNumber();
-			String name = account.getOwner().getName();
-			String email = account.getOwner().getEmail();
-			String contact = account.getOwner().getContactNumber();
-			String accountType = account.getAccountType();
-			String password = account.getOwner().getPassword();
-
-			// Add row to table
-			tableModel.addRow(new Object[]{accountNumber, name, email, contact, accountType, password, "Generate"});
-		}
+		updateAccountsTable(tableModel);
 
 
 
@@ -522,39 +511,7 @@ public class ControlPanel extends JFrame {
 		btnDelete.setForeground(Color.WHITE);
 		manageAccounts1.add(btnDelete);
 		
-
-		btnDelete.addActionListener(e -> {
-		    int selectedRow = table.getSelectedRow();
-
-		    if (selectedRow == -1) {
-		        JOptionPane.showMessageDialog(null, "Please select a row to delete.", "No Selection", JOptionPane.WARNING_MESSAGE);
-		        return;
-		    }
-
-		    String accountNumber = table.getValueAt(selectedRow, 0).toString();
-
-		    int confirm = JOptionPane.showConfirmDialog(
-		        null,
-		        "Are you sure you want to delete this account?\nThis action cannot be undone.",
-		        "Confirm Deletion",
-		        JOptionPane.YES_NO_OPTION,
-		        JOptionPane.WARNING_MESSAGE
-		    );
-
-		    if (confirm == JOptionPane.YES_OPTION) {
-		        boolean success = controller.deleteAccountByNumber(accountNumber);
-
-		        if (success) {
-		            ((DefaultTableModel) table.getModel()).removeRow(selectedRow);
-		            JOptionPane.showMessageDialog(null, "Account deleted successfully.", "Deleted", JOptionPane.INFORMATION_MESSAGE);
-		        } else {
-		            JOptionPane.showMessageDialog(null, "Account not found.", "Error", JOptionPane.ERROR_MESSAGE);
-		        }
-		    }
-		});
-
-
-
+		btnDelete.addActionListener(e -> controller.openDeleteAccountDialog(tableModel, table));
 
 		// Search Field and Buttons
 		textField = new JTextField();
@@ -679,50 +636,7 @@ public class ControlPanel extends JFrame {
 				return c;
 			}
 		});
-		tableModel1.setRowCount(0); // Clear existing rows
-		for (Account account : customers) {
-			java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
-
-			for (Transaction transaction : transactions) {
-				String date = transaction.getDate().toString();
-				String iD = account.getAccountNumber();
-				String type = transaction.getAction();
-				String amount = String.format("₱%.2f", transaction.getAmount());
-				String recipient = account.getOwner().getName();
-
-				// Use appropriate balance based on account type
-				double balance;
-				if (account instanceof LoanAccount) {
-					balance = ((LoanAccount) account).getLoanBalance();
-				} else {
-					balance = account.getBalance();
-				}
-
-				// Handle transfers
-				if (type.startsWith("Transfer to ")) {
-					recipient = type.substring(12); // Extract recipient from action text
-					type = "Transfer Sent";
-				} else if (type.startsWith("Transfer from ")) {
-					recipient = type.substring(14); // Extract recipient from action text
-					type = "Transfer Received";
-				}
-
-				// Add row to table with properly selected balance
-				tableModel1.addRow(new Object[]{
-						date,
-						recipient,
-						iD,
-						amount,
-						type,
-						String.format("₱%.2f", balance)
-				});
-			}
-		}
-
-
-
-
-
+		refreshTransactionsTable(tableModel1);
 
 		JTableHeader header1 = table1.getTableHeader();
 		header1.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -784,14 +698,15 @@ public class ControlPanel extends JFrame {
 		montlyTransactionSummaryPanel1.add(accountLabel);
 		
 		List<String> accountList = new ArrayList<>();
+		accountList.add("Select Option");
 
 		for (Account account : customers) {
 		    String displayText = account.getOwner().getName() + " - "  + account.getAccountNumber() + " - " + account.getAccountType();
 		    accountList.add(displayText);
 		}
 
-		// Sort alphabetically
-		Collections.sort(accountList);
+		List<String> accountsOnly = accountList.subList(1, accountList.size());
+		Collections.sort(accountsOnly);
 
 		// Assuming 'customers' is a List<Account> containing all the customer accounts
 		JComboBox<String> accountDropdown = new JComboBox<>();
@@ -813,6 +728,7 @@ public class ControlPanel extends JFrame {
 			refreshTransactionsTable(tableModel1);
 			accountDropdown.removeAllItems(); 
 			List<String> accountList1 = new ArrayList<>();
+			accountList1.add("Select Option");
 
 			for (Account account : customers) {
 			    String displayText = account.getOwner().getName() + " - " + account.getAccountNumber() + " - " + account.getAccountType();
@@ -820,7 +736,8 @@ public class ControlPanel extends JFrame {
 			}
 
 			// Sort alphabetically
-			Collections.sort(accountList1);
+			List<String> accountsOnly1 = accountList1.subList(1, accountList1.size());
+			Collections.sort(accountsOnly1);
 			for (String accountDisplay : accountList1) {
 				accountDropdown.addItem(accountDisplay);  
 			}
@@ -893,17 +810,52 @@ public class ControlPanel extends JFrame {
 				}
 
 				if (selectedAccount != null) {
-					// Generate report for the specific account
-					String report = ReportGenerator.generateMonthlyTransactionSummary(selectedAccount, startDate.getMonthValue(), startDate.getYear());
-					JOptionPane.showMessageDialog(montlyTransactionSummaryPanel1, report, "Monthly Transaction Summary", JOptionPane.INFORMATION_MESSAGE);
+				    if (selectedAccount.getAccountType().equalsIgnoreCase("Loan")) {
+				        String report = ReportGenerator.generateLoanTransactionSummary(selectedAccount, startDate, endDate);
+				        JOptionPane.showMessageDialog(montlyTransactionSummaryPanel1, report, "Loan Account Summary", JOptionPane.INFORMATION_MESSAGE);
+				    } else {
+				        String report = ReportGenerator.generateMonthlyTransactionSummary(selectedAccount, startDate.getMonthValue(), startDate.getYear());
+				        JOptionPane.showMessageDialog(montlyTransactionSummaryPanel1, report, "Monthly Transaction Summary", JOptionPane.INFORMATION_MESSAGE);
+				    }
 				} else {
-					// Handle case when no specific account is selected (show a filtered report for all accounts)
-					StringBuilder report = new StringBuilder("Summary for all accounts:\n");
-					for (Account account : customers) {
-						report.append(ReportGenerator.generateMonthlyTransactionSummary(account, startDate.getMonthValue(), startDate.getYear())).append("\n\n");
-					}
-					JOptionPane.showMessageDialog(montlyTransactionSummaryPanel1, report.toString(), "All Account Transaction Summary", JOptionPane.INFORMATION_MESSAGE);
+				    StringBuilder report = new StringBuilder("Summary for all accounts:\n\n");
+
+				    for (Account account : customers) {
+				        report.append("===== ")
+				              .append(account.getOwner().getName())
+				              .append(" - ")
+				              .append(account.getAccountNumber())
+				              .append(" - ")
+				              .append(account.getAccountType())
+				              .append(" =====\n");
+
+				        if (account.getAccountType().equalsIgnoreCase("Loan")) {
+				            report.append(ReportGenerator.generateLoanTransactionSummary(account, startDate, endDate));
+				        } else {
+				            report.append(ReportGenerator.generateMonthlyTransactionSummary(account, startDate.getMonthValue(), startDate.getYear()));
+				        }
+				        report.append("\n\n");
+				    }
+
+				    JTextArea textArea = new JTextArea(report.toString(), 25, 60); // Set rows & columns
+				    textArea.setWrapStyleWord(true);
+				    textArea.setLineWrap(true);
+				    textArea.setEditable(false);
+				    textArea.setCaretPosition(0); // Start from top
+
+				    JScrollPane scrollPane = new JScrollPane(textArea);
+				    scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+				    scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+				    JOptionPane.showMessageDialog(
+				        montlyTransactionSummaryPanel1,
+				        scrollPane,
+				        "All Account Transaction Summary",
+				        JOptionPane.INFORMATION_MESSAGE
+				    );
 				}
+
+
 
 			} catch (DateTimeParseException ex) {
 				JOptionPane.showMessageDialog(montlyTransactionSummaryPanel1, "Invalid date format. Please use MM/dd/yyyy.");
@@ -1015,7 +967,7 @@ public class ControlPanel extends JFrame {
 		    }
 		};
 
-		JTable table = new JTable(tableModel11);
+		JTable table = new JTable(tableModel11) ;
 		table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 		table.setRowHeight(30);
 		table.setFillsViewportHeight(true);
@@ -1082,10 +1034,10 @@ public class ControlPanel extends JFrame {
 
         // Table Panel
         JPanel tablePanel = new JPanel();
-        tablePanel.setBounds(51, 161, 809, 455);
+        tablePanel.setBounds(10, 161, 939, 455);
         tablePanel.setLayout(new BorderLayout());
 
-        String[] headers = {"Date", "ID", "Account Name", "Amount", "Status"};
+        String[] headers = {"Date", "ID", "Account Name", "Amount", "Type"};
         DefaultTableModel tableModel111 = new DefaultTableModel(headers, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -1093,7 +1045,21 @@ public class ControlPanel extends JFrame {
             }
         };
 
-        JTable manageTable = new JTable(tableModel111);
+        JTable manageTable = new JTable(tableModel111) {
+		    @Override
+		    public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+		        Component comp = super.prepareRenderer(renderer, row, column);
+		        if (comp instanceof JComponent) {
+		            Object value = getValueAt(row, column);
+		            if (value != null) {
+		                ((JComponent) comp).setToolTipText(value.toString());
+		            } else {
+		                ((JComponent) comp).setToolTipText(null);
+		            }
+		        }
+		        return comp;
+		    }
+		};;
         manageTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         manageTable.setRowHeight(30);
         manageTable.setFillsViewportHeight(true);
@@ -1133,16 +1099,18 @@ public class ControlPanel extends JFrame {
         btnCreateTrans.setForeground(Color.WHITE);
         manageTransactionPanel1.add(btnCreateTrans);
         btnCreateTrans.addActionListener(e -> {controller.openCreateTransactionDialog(tableModel111);
-        	refreshTransactionsTable(tableModel111);
+        	loadManageTransactions(tableModel111, customers);
         });
-        
 
         JButton btnEditTrans = new JButton("✏️ Edit");
         btnEditTrans.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
-        btnEditTrans.setBounds(340, 105, 120, 45);
+        btnEditTrans.setBounds(291, 105, 120, 45);
         btnEditTrans.setBackground(new Color(255, 193, 7)); // Yellow
         btnEditTrans.setForeground(Color.BLACK);
         manageTransactionPanel1.add(btnEditTrans);
+        btnEditTrans.addActionListener(e -> {
+        	controller.openEditTransactionDialog(tableModel111, manageTable);
+        });
 
         // --- Redesigned Sort Section and Type Filters ---
         JLabel lblSortBy1 = new JLabel("Sort By:");
@@ -1154,33 +1122,94 @@ public class ControlPanel extends JFrame {
         sortDropdown1.setBounds(121, 645, 160, 30);
         sortDropdown1.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         manageTransactionPanel1.add(sortDropdown1);
+        
+     // Create a TableRowSorter for your table model
+        TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel111);
+        manageTable.setRowSorter(sorter);
+
+        // Add sorting behavior to the dropdown
+        sortDropdown1.addActionListener(e -> {
+            String selected = (String) sortDropdown1.getSelectedItem();
+
+            if (selected == null) return;
+
+            switch (selected) {
+                case "Date":
+                    // Sort by Date column (column index 0), descending (latest first)
+                    sorter.setSortKeys(List.of(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+                    break;
+
+                case "Amount":
+                    sorter.setSortKeys(List.of(new RowSorter.SortKey(3, SortOrder.ASCENDING)));
+                    break;
+
+                case "Name":
+                    // Sort by Account Name (column index 2), ascending alphabetical
+                    sorter.setSortKeys(List.of(new RowSorter.SortKey(2, SortOrder.ASCENDING)));
+                    break;
+
+                default:
+                    sorter.setSortKeys(null); // No sorting for "Select Option"
+                    break;
+            }
+
+            sorter.sort();
+        });
 
         JButton depositBtn1 = new JButton("Deposits");
         depositBtn1.setFont(new Font("Segoe UI", Font.BOLD, 13));
         depositBtn1.setForeground(Color.WHITE);
         depositBtn1.setBackground(new Color(0, 123, 255));
-        depositBtn1.setBounds(311, 645, 110, 30);
+        depositBtn1.setBounds(421, 105, 120, 45);
         manageTransactionPanel1.add(depositBtn1);
 
         JButton withdrawalBtn1 = new JButton("Withdrawals");
         withdrawalBtn1.setFont(new Font("Segoe UI", Font.BOLD, 13));
         withdrawalBtn1.setForeground(Color.WHITE);
         withdrawalBtn1.setBackground(new Color(0, 123, 255));
-        withdrawalBtn1.setBounds(431, 645, 120, 30);
+        withdrawalBtn1.setBounds(551, 105, 120, 45);
         manageTransactionPanel1.add(withdrawalBtn1);
 
         JButton transferBtn1 = new JButton("Transfers");
         transferBtn1.setFont(new Font("Segoe UI", Font.BOLD, 13));
         transferBtn1.setForeground(Color.WHITE);
         transferBtn1.setBackground(new Color(0, 123, 255));
-        transferBtn1.setBounds(561, 645, 110, 30);
+        transferBtn1.setBounds(318, 636, 120, 45);
         manageTransactionPanel1.add(transferBtn1);
 
-        JButton generateReportBtn = new JButton("📄 Generate Report");
-        generateReportBtn.setFont(new Font("Segoe UI Emoji", Font.BOLD, 13));
-        generateReportBtn.setBackground(new Color(100, 180, 255));
-        generateReportBtn.setBounds(691, 645, 170, 30);
-        manageTransactionPanel1.add(generateReportBtn);
+        JButton repayBtn = new JButton("Repayments");
+        repayBtn.setForeground(Color.WHITE);
+        repayBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        repayBtn.setBackground(new Color(0, 123, 255));
+        repayBtn.setBounds(448, 636, 120, 45);
+        manageTransactionPanel1.add(repayBtn);
+
+        JButton borrowBtn = new JButton("Borrowed");
+        borrowBtn.setForeground(Color.WHITE);
+        borrowBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        borrowBtn.setBackground(new Color(0, 123, 255));
+        borrowBtn.setBounds(578, 636, 120, 45);
+        manageTransactionPanel1.add(borrowBtn);
+        
+        depositBtn1.addActionListener(e -> {
+            loadFilteredTransactions(tableModel111, "Deposit");
+        });
+
+        withdrawalBtn1.addActionListener(e -> {
+            loadFilteredTransactions(tableModel111, "Withdraw");
+        });
+
+        transferBtn1.addActionListener(e -> {
+            loadFilteredTransactions(tableModel111, "Transfer from", "Transfer to", "Loan Repayment from");
+        });
+        
+        repayBtn.addActionListener(e -> {
+            loadFilteredTransactions(tableModel111, "Loan Repayment");
+        });
+        
+        borrowBtn.addActionListener(e -> {
+            loadFilteredTransactions(tableModel111, "Loan Disbursement");
+        });
         
         JButton btnRefresh_2 = new JButton("🔄 Refresh");
         btnRefresh_2.addActionListener(new ActionListener() {
@@ -1193,6 +1222,8 @@ public class ControlPanel extends JFrame {
         btnRefresh_2.setBackground(new Color(108, 117, 125));
         btnRefresh_2.setBounds(740, 115, 120, 35);
         manageTransactionPanel1.add(btnRefresh_2);
+        
+        
 
 
      		
@@ -1361,4 +1392,26 @@ public class ControlPanel extends JFrame {
 	        }
 	    }
 	}
+	
+	public void loadFilteredTransactions(DefaultTableModel model, String... filterStatuses) {
+	    model.setRowCount(0); // Clear table
+
+	    for (Account account : customers) {
+	        for (Transaction t : account.getHistory().getHistoryList()) {
+	            for (String filter : filterStatuses) {
+	                if (t.getAction().startsWith(filter)) { 
+	                    model.addRow(new Object[]{
+	                        t.getDate().toString(),
+	                        account.getAccountNumber(),
+	                        account.getOwner().getName(),
+	                        "₱" + String.format("%.2f", t.getAmount()),
+	                        t.getAction()
+	                    });
+	                    break; // No need to check other filters
+	                }
+	            }
+	        }
+	    }
+	}
+
 }

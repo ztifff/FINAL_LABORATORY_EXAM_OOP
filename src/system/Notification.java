@@ -1,6 +1,5 @@
 package system;
 
-import java.util.Objects;
 
 public class Notification {
     private String title;
