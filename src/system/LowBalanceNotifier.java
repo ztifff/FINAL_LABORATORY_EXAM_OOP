@@ -10,6 +10,10 @@ public class LowBalanceNotifier implements AccountObserver {
     @Override
     public void update(Account account) {
         // Low balance for Savings or Checking
+    	String transaction_1 = null;
+		for (Transaction transaction1 : account.getHistory().getHistoryList()) {
+			transaction_1 = transaction1.getId();
+		}
         if ((account instanceof SavingsAccount || account instanceof CheckingAccount)
                 && account.getBalance() < LOW_BALANCE_THRESHOLD) {
             
@@ -17,7 +21,7 @@ public class LowBalanceNotifier implements AccountObserver {
             Notification notification = new Notification(
                 "Low Balance Warning", 
                 "⚠️ Balance below ₱1000: ₱" + account.getBalance(),
-                java.time.LocalDate.now().toString()
+                java.time.LocalDate.now().toString(), transaction_1
             );
             account.addNotification(notification);  
         }
@@ -33,7 +37,7 @@ public class LowBalanceNotifier implements AccountObserver {
                 Notification notification = new Notification(
                     "High Loan Balance Alert",
                     "⚠️ Your loan balance is high! Current Loan Balance: ₱" + String.format("%.2f", loanBalance),
-                    java.time.LocalDate.now().toString()
+                    java.time.LocalDate.now().toString(), transaction_1
                 );
                 account.addNotification(notification);  
             }

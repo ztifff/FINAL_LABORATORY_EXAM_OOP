@@ -7,7 +7,7 @@ public class Bank {
     private List<Account> accounts;
 
     public Bank() {
-        this.accounts = new ArrayList<>();  
+        this.accounts = new ArrayList<>();
     }
 
     
@@ -19,7 +19,6 @@ public class Bank {
         accounts.remove(account);
     }
 
-    
     public List<Account> getAllAccounts() {
         return accounts;
     }

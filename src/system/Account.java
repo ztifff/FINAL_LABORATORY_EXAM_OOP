@@ -8,13 +8,13 @@ import javax.swing.JOptionPane;
 
 import java.time.LocalDate;
 
-public class Account implements AccountSubject {
+public class Account implements AccountSubject, AccountObserver {
     private String accountNumber;
-    private double balance;
+    protected double balance;
     private String accountType;
     private List<AccountObserver> observers = new ArrayList<>();
     private List<Notification> notifications = new ArrayList<>();
-    private TransactionHistory history;
+    protected TransactionHistory history;
     private Customer owner;
     private Bank bank;
 
@@ -47,6 +47,10 @@ public class Account implements AccountSubject {
         return balance;
     }
 
+    public void setBalance(double balance) {
+		this.balance = balance;
+	}
+
 	public TransactionHistory getHistory() {
         return history;
     }
@@ -54,8 +58,10 @@ public class Account implements AccountSubject {
     public boolean deposit(double amount) {
         if (amount > 0) {
             balance += amount;
-            history.addTransaction(new Transaction("Deposit", amount, LocalDate.now()));
-            notifyObservers();  // Notify observers when balance changes
+            Transaction txn = new Transaction("Deposit", amount, LocalDate.now());
+            history.addTransaction(txn);
+            BankLedger.getInstance().getTransactionHistory().addTransaction(txn);
+            notifyObservers();
             return true;
         }
         return false;
@@ -64,13 +70,15 @@ public class Account implements AccountSubject {
     public boolean withdraw(double amount) {
         if (amount > 0 && amount <= balance) {
             balance -= amount;
-            history.addTransaction(new Transaction("Withdraw", amount, LocalDate.now()));
-            notifyObservers();  // Notify observers when balance changes
+            Transaction txn = new Transaction("Withdraw", amount, LocalDate.now());
+            history.addTransaction(txn);
+            BankLedger.getInstance().getTransactionHistory().addTransaction(txn);
+            notifyObservers();
             return true;
         }
         return false;
     }
-    
+
     public boolean transfer(Account recipient, Customer owner, double amount) {
         if (amount <= 0) {
             JOptionPane.showMessageDialog(null, "Transfer amount must be positive.", "Invalid Transfer", JOptionPane.ERROR_MESSAGE);
@@ -85,35 +93,49 @@ public class Account implements AccountSubject {
         // Deduct from sender
         this.balance -= amount;
 
-        // Check if recipient is a LoanAccount (repay loan instead of adding to balance)
         if (recipient instanceof LoanAccount) {
             LoanAccount loan = (LoanAccount) recipient;
             double remainingLoan = loan.getLoanBalance();
             double repaymentAmount = Math.min(amount, remainingLoan);
             loan.setLoanBalance(remainingLoan - repaymentAmount);
 
-            // Add transaction for loan repayment
-            loan.getHistory().addTransaction(
-            	    new Transaction("Loan Repayment from " + this.getOwner().getName(), repaymentAmount, LocalDate.now())
-            	);
-            
+            Transaction loanTxn = new Transaction("Loan Repayment from " + this.getOwner().getName(), repaymentAmount, LocalDate.now());
+            loan.getHistory().addTransaction(loanTxn);
+            BankLedger.getInstance().getTransactionHistory().addTransaction(loanTxn);
         } else {
-            // Regular transfer for Checking or Savings
             recipient.balance += amount;
-            recipient.getHistory().addTransaction(new Transaction("Transfer from " + this.getOwner().getName(), amount, LocalDate.now()));
+            Transaction receiveTxn = new Transaction("Transfer from " + this.getOwner().getName(), amount, LocalDate.now());
+            recipient.getHistory().addTransaction(receiveTxn);
+            BankLedger.getInstance().getTransactionHistory().addTransaction(receiveTxn);
         }
 
-        // Record transaction history
-        history.addTransaction(new Transaction("Transfer to " + recipient.getOwner().getName(), amount, LocalDate.now()));
-        
+        Transaction sendTxn = new Transaction("Transfer to " + recipient.getOwner().getName(), amount, LocalDate.now());
+        history.addTransaction(sendTxn);
+        BankLedger.getInstance().getTransactionHistory().addTransaction(sendTxn);
 
-        notifyObservers();  // Notify sender observers
-
+        notifyObservers();
         return true;
+    }
+    
+    public void recalculateBalance() {
+        double total = 0;
+
+        for (Transaction t : history.getHistoryList()) {
+            String action = t.getAction().toLowerCase();
+
+            if (action.contains("deposit") || action.contains("transfer from")) {
+                total += t.getAmount();
+            } else if (action.contains("withdraw") || action.contains("transfer to")) {
+                total -= t.getAmount();
+            }
+        }
+
+        this.balance = total;
     }
 
 
-    // Observer Methods (AccountSubject Interface Implementation)
+
+    // Observer Methods
     @Override
     public void addObserver(AccountObserver observer) {
         observers.add(observer);
@@ -132,10 +154,37 @@ public class Account implements AccountSubject {
     }
     
     public void addNotification(Notification notification) {
+        notification.addObserver(this);  // The Account itself is an observer
         notifications.add(notification);
     }
+
+    public void removeNotification(Notification notification) {
+        notification.removeObserver(this);  // Removes the observer when removing the notification
+        notifications.remove(notification);
+    }
+    
+    public void removeNotificationRelatedTo(String transactionId) {
+        notifications.removeIf(n -> transactionId.equals(n.getTransactionId()));
+    }
+    
+    public Notification findNotificationByTransactionID(String transactionID) {
+        for (Notification n : notifications) {
+            if (n.getTransactionId().equals(transactionID)) {
+                return n;
+            }
+        }
+        return null;
+    }
+
+
 
     public List<Notification> getNotifications() {
         return notifications;
     }
+
+	@Override
+	public void update(Account account) {
+		// TODO Auto-generated method stub
+		
+	}
 }

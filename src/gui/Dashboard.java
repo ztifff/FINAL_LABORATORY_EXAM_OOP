@@ -374,7 +374,7 @@ public class Dashboard extends JFrame {
 		accountInfoPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1)); 
 
 		// Labels and fields styling
-		JLabel lblAccountNumber = new JLabel("Account Number:");
+		JLabel lblAccountNumber = new JLabel("Account ID:");
 		lblAccountNumber.setHorizontalAlignment(SwingConstants.CENTER);
 		JTextField txtAccountNumber = new JTextField(account.getAccountNumber());
 		txtAccountNumber.setFocusable(false);
@@ -419,7 +419,7 @@ public class Dashboard extends JFrame {
 
 		if (accountType.equalsIgnoreCase("Loan")) {
 			cbDeposit = new JCheckBox("Repay Loan");  // Deposit for Loan
-			cbWithdraw = new JCheckBox("Borrow");     // Withdraw for Loan
+		cbWithdraw = new JCheckBox("Borrow");     // Withdraw for Loan
 		} else {
 			cbDeposit = new JCheckBox("Deposit");
 			cbWithdraw = new JCheckBox("Withdraw");
@@ -548,7 +548,7 @@ public class Dashboard extends JFrame {
 		transactionHistoryPanel.add(transactionHistoryHeaderPanel, BorderLayout.NORTH);
 
 		// Table Setup
-		String[] columnNames = { "Date", "Type", "Amount", "Recipient" };
+		String[] columnNames = { "Date", "Transaction ID" , "Type", "Amount", "Recipient" };
 		DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
 			@Override
 			public boolean isCellEditable(int row, int column) {
@@ -577,8 +577,8 @@ public class Dashboard extends JFrame {
 				return c;
 			}
 		});
-		updateTransactionTable(tableModel, account); 
-
+		updateTransactionTable(tableModel, account);
+		
 		// Table header styling
 		JTableHeader header = transactionTable.getTableHeader();
 		header.setFont(new Font("Segoe UI", Font.BOLD, 14));
@@ -656,7 +656,7 @@ public class Dashboard extends JFrame {
 		accountHolderPanel.setBackground(new Color(255, 255, 255));
 		accountHolderPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
 
-		JLabel lblUsernameAccount = new JLabel("Name:");
+		JLabel lblUsernameAccount = new JLabel("Account Holder Name:");
 		lblUsernameAccount.setHorizontalAlignment(SwingConstants.CENTER);
 		JLabel lblUsernameInfo = new JLabel(account.getOwner().getName());
 		lblUsernameInfo.setToolTipText(account.getOwner().getName());
@@ -668,11 +668,11 @@ public class Dashboard extends JFrame {
 
 		// ========== ACCOUNT NUMBER ==========
 		JPanel accountNumberPanel = new JPanel(new GridLayout(1, 2, 10, 10));
-		accountNumberPanel.setBorder(BorderFactory.createTitledBorder("Account Number"));
+		accountNumberPanel.setBorder(BorderFactory.createTitledBorder("Account ID"));
 		accountNumberPanel.setBackground(new Color(255, 255, 255));
 		accountNumberPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
 
-		JLabel lblAccountNumberInfo = new JLabel("Number:");
+		JLabel lblAccountNumberInfo = new JLabel("Account ID:");
 		lblAccountNumberInfo.setHorizontalAlignment(SwingConstants.CENTER);
 		JLabel lblAccountNumberView = new JLabel(account.getAccountNumber());
 		lblAccountNumberView.setHorizontalAlignment(SwingConstants.CENTER);
@@ -829,9 +829,15 @@ public class Dashboard extends JFrame {
 			String recipientAccountName = null;
 			String selectedAccountType = lblAccountTypeValue.getText().toString();
 			String transaction = "";
-			if (cbDeposit.isSelected()) transaction = "Deposit";
-			else if (cbWithdraw.isSelected()) transaction = "Withdraw";
-			else if (cbTransfer.isSelected()) transaction = "Transfer";
+			if (accountType.equalsIgnoreCase("Loan")) {
+				if (cbDeposit.isSelected()) transaction = "Repay Loan";
+				else if (cbWithdraw.isSelected()) transaction = "Borrow";
+			} else {
+				if (cbDeposit.isSelected()) transaction = "Deposit";
+				else if (cbWithdraw.isSelected()) transaction = "Withdraw";
+			}
+
+			if (cbTransfer.isSelected()) transaction = "Transfer";
 
 			if (transaction.isEmpty()) {
 				JOptionPane.showMessageDialog(this, "Please select a transaction type.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -839,10 +845,11 @@ public class Dashboard extends JFrame {
 			}
 
 			String message = "Transaction: " + transaction + "\n" +
-					"Account No: " + txtAccountNumber.getText() + "\n" +
-					"Amount: " + txtAmount.getText() + "\n" +
-					"Date: " + txtDate.getText() + "\n" +
-					"Account Type: " + selectedAccountType;
+	                 "Account No: " + txtAccountNumber.getText() + "\n" +
+	                 "Amount: " + txtAmount.getText() + "\n" +
+	                 "Date: " + txtDate.getText() + "\n" +
+	                 "Account Type: " + selectedAccountType;
+
 
 			if (cbTransfer.isSelected()) {
 				message += "\nRecipient Account No: " + txtRecipientAccount.getText() +
@@ -945,6 +952,7 @@ public class Dashboard extends JFrame {
 				case "Deposited" -> "Deposit successful!";
 				case "Transferred" -> "Transfer successful!";
 				case "Loan Payment" -> "Loan payment successful!";
+				case "Borrowed" -> "Loan Disbursement successful!";
 				default -> "Transaction successful!";
 				};
 
@@ -966,46 +974,52 @@ public class Dashboard extends JFrame {
 
 				bankLedger = BankLedger.getInstance();
 				Account recipientAccount = bankLedger.findAccountByName(recipientAccountName);
+				
+				String transaction_1 = null;
+				for (Transaction transaction1 : account.getHistory().getHistoryList()) {
+					transaction_1 = transaction1.getId();
+				}
 
 				if (transactionType.equals("Transferred")) {
 					// Find the recipient's LoanAccount manually
 					Account recipientLoanAccount = null;
 					for (Account acc : recipientAccount.getOwner().getAccount()) {
-					    if (acc instanceof LoanAccount) {
-					        recipientLoanAccount = acc;
-					        break;
-					    }
+						if (acc instanceof LoanAccount) {
+							recipientLoanAccount = acc;
+							break;
+						}
 					}
+					
 
 					if (recipientLoanAccount != null) {
-					    Notification repaymentNotification = new Notification(
-					        "Loan Repayment Sent",
-					        "You repaid PHP " + amount + " to the loan account of " + recipientLoanAccount.getOwner().getName() + ".",
-					        date
-					    );
-					    account.addNotification(repaymentNotification);
+						Notification repaymentNotification = new Notification(
+								"Loan Repayment Sent",
+								"You repaid PHP " + amount + " to the loan account of " + recipientLoanAccount.getOwner().getName() + ".",
+								date, transaction_1
+								);
+						account.addNotification(repaymentNotification);
 
-					    Notification receivedLoanRepayment = new Notification(
-					        "Loan Repayment Received",
-					        "Your loan account received PHP " + amount + " from " + account.getOwner().getName() + ".",
-					        date
-					    );
-					    recipientLoanAccount.addNotification(receivedLoanRepayment);
+						Notification receivedLoanRepayment = new Notification(
+								"Loan Repayment Received",
+								"Your loan account received PHP " + amount + " from " + account.getOwner().getName() + ".",
+								date, transaction_1
+								);
+						recipientLoanAccount.addNotification(receivedLoanRepayment);
 
-					    recentTransactionListModel.addElement("• Repaid Loan: ₱" + amount);
+						recentTransactionListModel.addElement("• Repaid Loan: ₱" + amount);
 					}
 					else {
 						Notification transferNotification = new Notification(
 								"Transfer Completed", 
 								"You transferred PHP " + amount + " to " + recipientAccount.getOwner().getName() + ".", 
-								date
+								date, transaction_1
 								);
 						account.addNotification(transferNotification);
 
 						Notification receivedNotification = new Notification(
 								"Money Received", 
 								"You received PHP " + amount + " from " + account.getOwner().getName() + ".", 
-								date
+								date, transaction_1
 								);
 						recipientAccount.addNotification(receivedNotification);
 						recentTransactionListModel.addElement("• Transferred: ₱" + amount);
@@ -1015,7 +1029,7 @@ public class Dashboard extends JFrame {
 					Notification loanPaymentNotification = new Notification(
 							"Loan Payment", 
 							"You paid a loan of PHP " + amount + ".", 
-							date
+							date, transaction_1
 							);
 					account.addNotification(loanPaymentNotification);  
 					refreshNotifications(account);
@@ -1025,7 +1039,7 @@ public class Dashboard extends JFrame {
 					Notification genericNotification = new Notification(
 							transactionType + " Completed", 
 							"Transaction of PHP " + amount + " successful.", 
-							date
+							date, transaction_1
 							);
 					account.addNotification(genericNotification);  
 					refreshNotifications(account);
@@ -1059,9 +1073,10 @@ public class Dashboard extends JFrame {
 	public void updateTransactionTable(DefaultTableModel tableModel, Account account) {
 		java.util.List<Transaction> transactions = account.getHistory().getHistoryList();
 		tableModel.setRowCount(0); // Clear existing rows
-
+		
 		for (Transaction transaction : transactions) {
 			String date = transaction.getDate().toString();
+			String transactionID = transaction.getId();
 			String type = transaction.getAction();
 			String amount = String.format("₱%.2f", transaction.getAmount());
 			String recipient = account.getOwner().getName(); // Default recipient
@@ -1075,11 +1090,11 @@ public class Dashboard extends JFrame {
 				type = "Transfer Received";
 			} else if (type.startsWith("Loan Repayment from")) {
 				recipient = type.substring(20); // Extract sender's name
-		        type = "Loan Repayment";
+				type = "Loan Repayment";
 			}
 
 			// Add row to table
-			tableModel.addRow(new Object[]{date, type, amount, recipient});
+			tableModel.addRow(new Object[]{date, transactionID , type, amount, recipient});
 		}
 	}
 

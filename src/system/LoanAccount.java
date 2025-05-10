@@ -66,6 +66,24 @@ public class LoanAccount extends Account {
 
 	    return filtered;
 	}
+	
+	@Override
+	public void recalculateBalance() {
+	    double loanTotal = 0;
+
+	    for (Transaction t : history.getHistoryList()) {
+	        String action = t.getAction().toLowerCase();
+
+	        if (action.contains("loan disbursement")) {
+	            loanTotal += t.getAmount(); // money borrowed
+	        } else if (action.contains("loan repayment") || action.contains("loan repayment from")) {
+	            loanTotal -= t.getAmount(); // money repaid
+	        }
+	    }
+
+	    this.loanBalance = loanTotal; // Corrected line
+	}
+
 
 	@Override
 	public String getAccountType() {

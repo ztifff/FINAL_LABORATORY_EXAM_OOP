@@ -14,6 +14,19 @@ public class TransactionHistory {
         transactions.add(transaction);
     }
     
+    public void removeTransaction(Transaction transaction) {
+    	transactions.remove(transaction);
+    }
+
+    public Transaction findTransactionID(String transactionId) {
+    	for (Transaction transaction : transactions) {
+    		if (transaction.getId().equals(transactionId)) {
+                return transaction;
+            }
+		}
+        return null; 
+    }
+    
     public List<Transaction> getHistoryList() {
         return transactions;
     }

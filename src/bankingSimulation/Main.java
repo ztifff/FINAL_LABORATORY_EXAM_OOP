@@ -3,6 +3,8 @@ package bankingSimulation;
 import gui.Login;
 import system.*;
 
+import java.time.LocalDate;
+
 public class Main {
 
     public static void main(String[] args) {
@@ -15,27 +17,43 @@ public class Main {
 
         // Test Customer 1: Loan + Checking
         Customer testCustomer = new Customer("sad", "2025/12/12", "09443434332", "sad@.com", "street", "tas");
-        Account account = AccountFactory.createAccount("Checking", testCustomer);
-        Account loanAccount = AccountFactory.createAccount("Loan", testCustomer);
-        account.deposit(2000);
-        ((LoanAccount) loanAccount).borrow(2000);
-        bankLedger.addAccount(account);
-        bankLedger.addAccount(loanAccount);
-        testCustomer.addAccount(account);
-        testCustomer.addAccount(loanAccount);
-        account.addObserver(lowBalanceNotifier);
-        loanAccount.addObserver(lowBalanceNotifier);
-        account.addNotification(new Notification("Initial Deposit", "You deposited PHP 2000 to your Checking account.", java.time.LocalDate.now().toString()));
-        loanAccount.addNotification(new Notification("Loan Disbursement", "You borrowed PHP 2000 on your Loan account.", java.time.LocalDate.now().toString()));
+
+        Account checking = AccountFactory.createAccount("Checking", testCustomer);
+        checking.deposit(2000);
+        String checkingTxId = null;
+        for (Transaction t : checking.getHistory().getHistoryList()) {
+            checkingTxId = t.getId();
+        }
+        checking.addNotification(new Notification("Initial Deposit", "You deposited PHP 2000 to your Checking account.", LocalDate.now().toString(), checkingTxId));
+
+        Account loan = AccountFactory.createAccount("Loan", testCustomer);
+        ((LoanAccount) loan).borrow(2000);
+        String loanTxId = null;
+        for (Transaction t : loan.getHistory().getHistoryList()) {
+            loanTxId = t.getId();
+        }
+        loan.addNotification(new Notification("Loan Disbursement", "You borrowed PHP 2000 on your Loan account.", LocalDate.now().toString(), loanTxId));
+
+        bankLedger.addAccount(checking);
+        bankLedger.addAccount(loan);
+        testCustomer.addAccount(checking);
+        testCustomer.addAccount(loan);
+        checking.addObserver(lowBalanceNotifier);
+        loan.addObserver(lowBalanceNotifier);
 
         // Test Customer 2: Only Checking
-        Customer testCustomer11 = new Customer("wat", "2025/12/12", "09443434332", "sad@.com", "street", "yat");
-        account = AccountFactory.createAccount("Checking", testCustomer11);
-        account.deposit(2000);
-        bankLedger.addAccount(account);
-        testCustomer11.addAccount(account);
-        account.addObserver(lowBalanceNotifier);
-        account.addNotification(new Notification("Initial Deposit", "You deposited PHP 2000 to your Checking account.", java.time.LocalDate.now().toString()));
+        Customer testCustomer2 = new Customer("wat", "2025/12/12", "09443434332", "sad@.com", "street", "yat");
+        Account checking2 = AccountFactory.createAccount("Checking", testCustomer2);
+        checking2.deposit(2000);
+        String checking2TxId = null;
+        for (Transaction t : checking2.getHistory().getHistoryList()) {
+            checking2TxId = t.getId();
+        }
+        checking2.addNotification(new Notification("Initial Deposit", "You deposited PHP 2000 to your Checking account.", LocalDate.now().toString(), checking2TxId));
+
+        bankLedger.addAccount(checking2);
+        testCustomer2.addAccount(checking2);
+        checking2.addObserver(lowBalanceNotifier);
 
         // ➕ Add 15 more predefined customers
         for (int i = 1; i <= 15; i++) {
@@ -48,25 +66,29 @@ public class Main {
 
             Customer customer = new Customer(name, dob, contact, email, address, password);
 
-            // Alternate between account types for variety (or set fixed type if you prefer)
-            String accountType;
-            if (i % 3 == 0) {
-                accountType = "Loan";
-            } else if (i % 3 == 1) {
-                accountType = "Checking";
-            } else {
-                accountType = "Savings";
-            }
+            String accountType = switch (i % 3) {
+                case 0 -> "Loan";
+                case 1 -> "Checking";
+                default -> "Savings";
+            };
 
             Account acc = AccountFactory.createAccount(accountType, customer);
+            double amount = 1000 + i * 100;
 
-            // Perform a basic operation based on account type
             if (accountType.equals("Loan")) {
-                ((LoanAccount) acc).borrow(1000 + i * 100);
-                acc.addNotification(new Notification("Loan", "You borrowed PHP " + (1000 + i * 100) + " on your Loan account.", java.time.LocalDate.now().toString()));
+                ((LoanAccount) acc).borrow(amount);
+                String txId = null;
+                for (Transaction t : acc.getHistory().getHistoryList()) {
+                    txId = t.getId();
+                }
+                acc.addNotification(new Notification("Loan", "You borrowed PHP " + amount + " on your Loan account.", LocalDate.now().toString(), txId));
             } else {
-                acc.deposit(1000 + i * 100);
-                acc.addNotification(new Notification("Deposit", "You deposited PHP " + (1000 + i * 100) + " to your " + accountType + " account.", java.time.LocalDate.now().toString()));
+                acc.deposit(amount);
+                String txId = null;
+                for (Transaction t : acc.getHistory().getHistoryList()) {
+                    txId = t.getId();
+                }
+                acc.addNotification(new Notification("Deposit", "You deposited PHP " + amount + " to your " + accountType + " account.", LocalDate.now().toString(), txId));
             }
 
             acc.addObserver(lowBalanceNotifier);

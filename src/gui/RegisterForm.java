@@ -302,6 +302,7 @@ public class RegisterForm extends JFrame {
 			
 			Bank bank = BankLedger.getInstance().getBank();
 		    Customer existing = bank.findCustomerByEmail(email);
+		    
 
 		    if (existing != null) {
 		        int choice = JOptionPane.showConfirmDialog(
@@ -346,7 +347,7 @@ public class RegisterForm extends JFrame {
 		                    Notification loanNotification = new Notification(
 		                        "Loan Granted", 
 		                        "You borrowed PHP " + deposit + " as your starting loan.", 
-		                        loanInitial.getDate().toString()
+		                        loanInitial.getDate().toString(), loanInitial.getId()
 		                    );
 		                    newAccount.addNotification(loanNotification);
 
@@ -358,7 +359,7 @@ public class RegisterForm extends JFrame {
 		                    Notification initialDepositNotification = new Notification(
 		                        "Initial Deposit Completed", 
 		                        "You deposited PHP " + deposit + " as initial deposit.", 
-		                        initialDeposit.getDate().toString()
+		                        initialDeposit.getDate().toString(), initialDeposit.getId()
 		                    );
 		                    newAccount.addNotification(initialDepositNotification);
 		                }
@@ -383,6 +384,11 @@ public class RegisterForm extends JFrame {
 			BankLedger.getInstance().addAccount(account);
 			customer.addAccount(account);
 			
+			String transaction_1 = null;
+			for (Transaction transaction1 : account.getHistory().getHistoryList()) {
+				transaction_1 = transaction1.getId();
+			}
+			
 			// Register LowBalanceNotifier as an observer for the new account
 			LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
 			account.addObserver(lowBalanceNotifier);
@@ -397,7 +403,7 @@ public class RegisterForm extends JFrame {
 			    Notification loanNotification = new Notification(
 			        "Loan Granted", 
 			        "You borrowed PHP " + deposit + " as your starting loan.", 
-			        loanInitial.getDate().toString()
+			        loanInitial.getDate().toString(), transaction_1
 			    );
 			    account.addNotification(loanNotification);
 
@@ -409,7 +415,7 @@ public class RegisterForm extends JFrame {
 			    Notification initialDepositNotification = new Notification(
 			        "Initial Deposit Completed", 
 			        "You deposited PHP " + deposit + " as initial deposit.", 
-			        initialDeposit.getDate().toString()
+			        initialDeposit.getDate().toString(), transaction_1
 			    );
 			    account.addNotification(initialDepositNotification);
 			}
