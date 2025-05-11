@@ -167,11 +167,25 @@ public class Account implements AccountSubject, AccountObserver {
         notifications.removeIf(n -> transactionId.equals(n.getTransactionId()));
     }
     
+    public Notification getLatestNotification() {
+        if (!notifications.isEmpty()) {
+            return notifications.get(notifications.size() - 1);
+        }
+        return null;
+    }
+    
     public Notification findNotificationByTransactionID(String transactionID) {
         for (Notification n : notifications) {
             if (n.getTransactionId().equals(transactionID)) {
                 return n;
             }
+        }
+        return null;
+    }
+    
+    public Transaction getLatestTransaction() {
+        if (!history.getHistoryList().isEmpty()) {
+            return history.getHistoryList().get(history.getHistoryList().size() - 1);
         }
         return null;
     }

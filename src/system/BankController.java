@@ -57,107 +57,133 @@ public class BankController {
 			String accNum = accountNumberField.getText().trim();
 			String amountText = amountField.getText().trim();
 			String type = (String) typeDropdown.getSelectedItem();
-
+			
 			try {
 				double amount = Double.parseDouble(amountText);
 				BankLedger bankLedger = BankLedger.getInstance();
 				Account selectedAccount = bankLedger.getAccountByNumber(accNum);
 				
-				String transaction_1 = null;
-				for (Transaction transaction1 : selectedAccount.getHistory().getHistoryList()) {
-					transaction_1 = transaction1.getId();
+				boolean transactionSuccess = false;
+				String transactionType = "";
+
+				switch (type) {
+				    case "Deposit":
+				        if (selectedAccount instanceof LoanAccount) {
+				            JOptionPane.showMessageDialog(null, "You cannot directly use Deposit in Loan use Loan Repayment");
+				            return;
+				        }
+				        transactionSuccess = selectedAccount.deposit(amount);
+				        transactionType = "Deposited";
+				        break;
+
+				    case "Withdraw":
+				        if (selectedAccount instanceof LoanAccount) {
+				            JOptionPane.showMessageDialog(null, "You cannot directly use Withdraw in Loan use Borrow");
+				            return;
+				        }
+				        transactionSuccess = selectedAccount.withdraw(amount);
+				        transactionType = "Withdrawn";
+				        break;
+
+				    case "Transfer":
+				        if (selectedAccount instanceof LoanAccount) {
+				            JOptionPane.showMessageDialog(null, "Loan accounts cannot transfer money to others.");
+				            return;
+				        }
+				        String recipient = JOptionPane.showInputDialog("Enter recipient account number:");
+				        Account recipientAccount = bankLedger.getAccountByNumber(recipient);
+				        if (recipientAccount != null) {
+				            transactionSuccess = selectedAccount.transfer(recipientAccount, selectedAccount.getOwner(), amount);
+				            transactionType = "Transferred";
+				        } else {
+				            JOptionPane.showMessageDialog(null, "Recipient not found.");
+				            return;
+				        }
+				        break;
+
+				    case "Loan Repayment":
+				        Account loanAcc = bankLedger.getAccountByNumber(accNum);
+
+				        if (loanAcc == null || !(loanAcc instanceof LoanAccount)) {
+				            JOptionPane.showMessageDialog(null, "Loan account not found.");
+				            return;
+				        }
+
+				        LoanAccount loanAccount = (LoanAccount) loanAcc;
+
+				        if (loanAccount.getLoanBalance() < amount) {
+				            JOptionPane.showMessageDialog(null, "Insufficient balance for repayment.");
+				            return;
+				        }
+
+				        boolean success = loanAccount.repayLoan(amount);
+
+				        if (success) {
+				        	String transaction_1 = null;
+							for (Transaction transaction1 : selectedAccount.getHistory().getHistoryList()) {
+								transaction_1 = transaction1.getId();
+							}
+				            transactionSuccess = true;
+				            // Notifications for loan repayment
+				            selectedAccount.addNotification(new Notification(
+				                    "Loan Repayment Sent",
+				                    "You repaid PHP " + amount + " to loan account " + accNum,
+				                    LocalDate.now().toString(), transaction_1));
+
+				            loanAccount.addNotification(new Notification(
+				                    "Loan Repayment Received",
+				                    "Your loan account received PHP " + amount + " from " + selectedAccount.getAccountNumber(),
+				                    LocalDate.now().toString(), transaction_1));
+				        }
+				        break;
+
+				    case "Borrow":
+				        if (selectedAccount instanceof LoanAccount) {
+				        	String transaction_1 = null;
+							for (Transaction transaction1 : selectedAccount.getHistory().getHistoryList()) {
+								transaction_1 = transaction1.getId();
+							}
+				            LoanAccount loanAccount1 = (LoanAccount) selectedAccount;
+				            transactionSuccess = loanAccount1.borrow(amount);
+				            transactionType = "Borrowed";
+				            // Notifications for loan borrowing
+				            selectedAccount.addNotification(new Notification(
+				                    "Loan Borrowed", "You borrowed PHP " + amount + " from your loan account.", LocalDate.now().toString(), transaction_1));
+				        } else {
+				            JOptionPane.showMessageDialog(null, "Only loan accounts can borrow money.");
+				            return;
+				        }
+				        break;
 				}
 
-				if (selectedAccount != null) {
-					switch (type) {
-					case "Deposit":
-						if (selectedAccount instanceof LoanAccount) {
-							JOptionPane.showMessageDialog(null, "You cannot directly use Deposit in Loan use Loan Repayment");
-							return;
-						}
-						selectedAccount.deposit(amount);
-						selectedAccount.addNotification(new Notification(
-								"Deposit Made", "You deposited PHP " + amount, LocalDate.now().toString(), transaction_1));
-						break;
-
-					case "Withdraw":
-						if (selectedAccount instanceof LoanAccount) {
-							JOptionPane.showMessageDialog(null, "You cannot directly use Withdraw in Loan use Borrow");
-							return;
-						}
-						selectedAccount.withdraw(amount);
-						selectedAccount.addNotification(new Notification(
-								"Withdrawal Made", "You withdrew PHP " + amount, LocalDate.now().toString(), transaction_1));
-						break;
-
-					case "Transfer":
-						if (selectedAccount instanceof LoanAccount) {
-							JOptionPane.showMessageDialog(null, "Loan accounts cannot transfer money to others.");
-							return;
-						}
-						String recipient = JOptionPane.showInputDialog("Enter recipient account number:");
-						Account recipientAccount = bankLedger.getAccountByNumber(recipient);
-						if (recipientAccount != null) {
-							selectedAccount.transfer(recipientAccount, selectedAccount.getOwner(), amount);
-							selectedAccount.addNotification(new Notification(
-									"Transfer Sent", "You transferred PHP " + amount + " to " + recipient, LocalDate.now().toString(), transaction_1));
-							recipientAccount.addNotification(new Notification(
-									"Transfer Received", "You received PHP " + amount + " from " + selectedAccount.getAccountNumber(), LocalDate.now().toString(), transaction_1));
-						} else {
-							JOptionPane.showMessageDialog(null, "Recipient not found.");
-							return;
-						}
-						break;
-
-					case "Loan Repayment":
-						Account loanAcc = bankLedger.getAccountByNumber(accNum);
-
-						if (loanAcc == null || !(loanAcc instanceof LoanAccount)) {
-							JOptionPane.showMessageDialog(null, "Loan account not found.");
-							return;
-						}
-
-						// Get the payer (selectedAccount) and the recipient (loanAccount)
-						LoanAccount loanAccount = (LoanAccount) loanAcc;
-
-						if (loanAccount.getLoanBalance() < amount) {
-							JOptionPane.showMessageDialog(null, "Insufficient balance for repayment.");
-							return;
-						}
-
-						boolean success = loanAccount.repayLoan(amount);
-
-						if (success) {
-
-							selectedAccount.addNotification(new Notification(
-									"Loan Repayment Sent",
-									"You repaid PHP " + amount + " to loan account " + accNum,
-									LocalDate.now().toString(), transaction_1));
-
-							loanAccount.addNotification(new Notification(
-									"Loan Repayment Received",
-									"Your loan account received PHP " + amount + " from " + selectedAccount.getAccountNumber(),
-									LocalDate.now().toString(), transaction_1));
-						}
-						break;
-					case "Borrow":
-						if (selectedAccount instanceof LoanAccount) {
-							LoanAccount loanAccount1 = (LoanAccount) selectedAccount;
-							loanAccount1.borrow(amount);
-							selectedAccount.addNotification(new Notification(
-									"Loan Borrowed", "You borrowed PHP " + amount + " from your loan account.", LocalDate.now().toString(), transaction_1));
-						} else {
-							JOptionPane.showMessageDialog(null, "Only loan accounts can borrow money.");
-							return;
-						}
-						break;
+				if (transactionSuccess) {
+					String transaction_1 = null;
+					for (Transaction transaction1 : selectedAccount.getHistory().getHistoryList()) {
+						transaction_1 = transaction1.getId();
 					}
+				    // Only add notifications after the transaction is successful
+				    if (transactionType.equals("Deposited")) {
+				        selectedAccount.addNotification(new Notification(
+				                "Deposit Made", "You deposited PHP " + amount, LocalDate.now().toString(), transaction_1));
+				    } else if (transactionType.equals("Withdrawn")) {
+				        selectedAccount.addNotification(new Notification(
+				                "Withdrawal Made", "You withdrew PHP " + amount, LocalDate.now().toString(), transaction_1));
+				    } else if (transactionType.equals("Transferred")) {
+				        String recipient = JOptionPane.showInputDialog("Enter recipient account number:");
+				        Account recipientAccount = bankLedger.getAccountByNumber(recipient);
+				        if (recipientAccount != null) {
+				            selectedAccount.addNotification(new Notification(
+				                    "Transfer Sent", "You transferred PHP " + amount + " to " + recipient, LocalDate.now().toString(), transaction_1));
+				            recipientAccount.addNotification(new Notification(
+				                    "Transfer Received", "You received PHP " + amount + " from " + selectedAccount.getAccountNumber(), LocalDate.now().toString(), transaction_1));
+				        }
+				    }
 
-					JOptionPane.showMessageDialog(null, "Transaction successful!");
-
-				} else {
-					JOptionPane.showMessageDialog(null, "Account not found.");
+				    JOptionPane.showMessageDialog(null, "Transaction successful!");
 				}
+
+
+				JOptionPane.showMessageDialog(null, "Transaction successful!");
 
 			} catch (NumberFormatException ex) {
 				JOptionPane.showMessageDialog(null, "Invalid amount.");
@@ -360,7 +386,7 @@ public class BankController {
 	        return;
 	    }
 
-	    String transactionID = table.getValueAt(selectedRow, 1).toString(); // Assuming column 1 is the ID
+	    String transactionID = table.getValueAt(selectedRow, 3).toString(); // Assuming column 1 is the ID
 
 	    int confirm = JOptionPane.showConfirmDialog(
 	            null,
@@ -392,48 +418,52 @@ public class BankController {
 	                double amount = tx.getAmount();
 
 	                switch (action) {
-	                case "Deposit":
-	                    acc.setBalance(acc.getBalance() - amount); // reverse deposit
-	                    break;
+	                    case "Deposit":
+	                        acc.setBalance(acc.getBalance() - amount); // reverse deposit
+	                        break;
 
-	                case "Withdraw":
-	                    acc.setBalance(acc.getBalance() + amount); // reverse withdrawal
-	                    break;
+	                    case "Withdraw":
+	                        acc.setBalance(acc.getBalance() + amount); // reverse withdrawal
+	                        break;
 
-	                case String s when s.startsWith("Transfer to "): {
-	                    String recipientAccNum = s.replace("Transfer to ", "").trim();
-	                    Account recipient = bankLedger.getAccountByNumber(recipientAccNum);
-	                    if (recipient != null) {
-	                        recipient.setBalance(recipient.getBalance() - amount); // reverse recipient gain
-	                        acc.setBalance(acc.getBalance() + amount);             // refund sender
+	                    case String s when s.startsWith("Transfer to "): {
+	                        String recipientAccNum = s.replace("Transfer to ", "").trim();
+	                        Account recipient = bankLedger.getAccountByNumber(recipientAccNum);
+	                        if (recipient != null) {
+	                            recipient.setBalance(recipient.getBalance() - amount); // reverse recipient gain
+	                            acc.setBalance(acc.getBalance() + amount);             // refund sender
+	                        }
+	                        break;
 	                    }
-	                    break;
+
+	                    case String s when s.startsWith("Transfer from "): {
+	                        String senderAccNum = s.replace("Transfer from ", "").trim();
+	                        Account sender = bankLedger.getAccountByNumber(senderAccNum);
+	                        if (sender != null) {
+	                            sender.setBalance(sender.getBalance() + amount); // refund sender
+	                            acc.setBalance(acc.getBalance() - amount);       // reverse recipient gain
+	                        }
+	                        break;
+	                    }
+
+	                    case "Loan Repayment":
+	                        if (acc instanceof LoanAccount loanAcc) {
+	                            loanAcc.setLoanBalance(loanAcc.getLoanBalance() + amount); // undo repayment
+	                        }
+	                        break;
+
+	                    case "Loan Borrowed":
+	                        if (acc instanceof LoanAccount loanAcc) {
+	                            loanAcc.setLoanBalance(loanAcc.getLoanBalance() - amount); // undo borrowed amount
+	                        }
+	                        break;
+
+	                    default:
+	                        break;
 	                }
 
-	                case String s when s.startsWith("Transfer from "): {
-	                    // Optional: handle if needed, but normally mirrored above.
-	                    break;
-	                }
-
-	                case "Loan Repayment":
-	                    if (acc instanceof LoanAccount loanAcc) {
-	                        loanAcc.setLoanBalance(loanAcc.getLoanBalance() + amount); // undo repayment
-	                    }
-	                    break;
-
-	                case "Loan Borrowed":
-	                    if (acc instanceof LoanAccount loanAcc) {
-	                        loanAcc.setLoanBalance(loanAcc.getLoanBalance() - amount); // undo borrowed amount
-	                    }
-	                    break;
-
-	                default:
-	                    break;
-	            }
-
-
-	                // Remove notifications if needed (optional)
-	                acc.removeNotificationRelatedTo(transactionId); // ← you'll need to implement this
+	                // Remove related notifications
+	                acc.removeNotificationRelatedTo(transactionId);
 
 	                // Remove the transaction from history
 	                historyList.remove(tx);
@@ -443,9 +473,7 @@ public class BankController {
 	    }
 	    return false;
 	}
-
-
-
+	
 	public void openDeleteAccountDialog(DefaultTableModel tableModel, JTable table) {
 		int selectedRow = table.getSelectedRow();
 

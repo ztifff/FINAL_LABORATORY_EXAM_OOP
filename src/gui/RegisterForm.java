@@ -247,186 +247,143 @@ public class RegisterForm extends JFrame {
 		});
 
 		createAccountButton.addActionListener(e -> {
-			String fullName = fullNameField.getText().trim();
-			Date dobDate = (Date) dobSpinner.getValue();
-			String dob = new SimpleDateFormat("yyyy-MM-dd").format(dobDate);
-			String phone = phoneField.getText().trim();
-			String email = emailField.getText().trim();
-			String address = addressField.getText().trim();
-			String depositStr = initialDepositField.getText().trim();
-			String password = new String(passwordField.getPassword());
-			String confirmPassword = new String(confirmPasswordField.getPassword());
+		    String fullName = fullNameField.getText().trim();
+		    Date dobDate = (Date) dobSpinner.getValue();
+		    String dob = new SimpleDateFormat("yyyy-MM-dd").format(dobDate);
+		    String phone = phoneField.getText().trim();
+		    String email = emailField.getText().trim();
+		    String address = addressField.getText().trim();
+		    String depositStr = initialDepositField.getText().trim();
+		    String password = new String(passwordField.getPassword());
+		    String confirmPassword = new String(confirmPasswordField.getPassword());
 
-			// Validation
-			if (fullName.isEmpty() || dob.isEmpty() || phone.isEmpty() || email.isEmpty() || address.isEmpty() ||
-					depositStr.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() ||
-					(!savingsButton.isSelected() && !checkingButton.isSelected() && !loanButton.isSelected())) {
-
-				JOptionPane.showMessageDialog(this, "Please complete all fields.", "Error", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-			if (!phone.matches("\\d{10,11}")) {
-				JOptionPane.showMessageDialog(this, "Please enter a valid phone number (10-11 digits).", "Error", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-			if (!email.contains("@") || !email.contains(".com")) {
-				JOptionPane.showMessageDialog(this, "Please enter a valid email address.", "Error", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-			
-			if (!password.equals(confirmPassword)) {
-				JOptionPane.showMessageDialog(this, "Passwords do not match!", "Error", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-			double deposit;
-			try {
-				deposit = Double.parseDouble(depositStr);
-				if (deposit < 0) throw new NumberFormatException();
-			} catch (NumberFormatException ex) {
-				JOptionPane.showMessageDialog(this, "Please enter a valid initial deposit.", "Error", JOptionPane.ERROR_MESSAGE);
-				return;
-			}
-
-			String accountType = "";
-			if (savingsButton.isSelected()) {
-				accountType = "Savings";
-			} else if (checkingButton.isSelected()) {
-				accountType = "Checking";
-			} else if (loanButton.isSelected()) {
-				accountType = "Loan";
-			}
-			
-			Bank bank = BankLedger.getInstance().getBank();
-		    Customer existing = bank.findCustomerByEmail(email);
-		    
-
-		    if (existing != null) {
-		        int choice = JOptionPane.showConfirmDialog(
-		            null,
-		            "An account already exists with this email. Do you want to open a new account under the same user?",
-		            "Customer Found",
-		            JOptionPane.YES_NO_OPTION
-		        );
-
-		        if (choice == JOptionPane.YES_OPTION) {
-		        	boolean hasSameType = false;
-
-		            for (Account acc : existing.getAccount()) {
-		                if (acc.getAccountType().equalsIgnoreCase(accountType)) {
-		                    hasSameType = true;
-		                    break;
-		                }
-		            }
-
-		            if (hasSameType) {
-		                JOptionPane.showMessageDialog(null,
-		                    "You already have a " + accountType + " account.",
-		                    "Duplicate Account Type",
-		                    JOptionPane.WARNING_MESSAGE);
-		                return;
-		            } else {
-		                // Safe to create a new account
-		                Account newAccount = AccountFactory.createAccount(accountType, existing);
-		                bank.addAccount(newAccount);
-		                existing.addAccount(newAccount); 
-		                
-		             // Register LowBalanceNotifier as an observer for the new account
-		                LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
-		                newAccount.addObserver(lowBalanceNotifier);
-
-		                LocalDate currentDate = LocalDate.now();
-		                if (loanButton.isSelected()) {
-		                    ((LoanAccount) newAccount).borrow(deposit);  // Handle loan-specific deposit (loan disbursement)
-		                    // Add initial loan transaction and notification
-		                    Transaction loanInitial = new Transaction("Loan Disbursement", deposit, currentDate);
-		                    newAccount.getHistory().addTransaction(loanInitial);
-		                    Notification loanNotification = new Notification(
-		                        "Loan Granted", 
-		                        "You borrowed PHP " + deposit + " as your starting loan.", 
-		                        loanInitial.getDate().toString(), loanInitial.getId()
-		                    );
-		                    newAccount.addNotification(loanNotification);
-
-		                } else {
-		                    newAccount.deposit(deposit);  // Handle deposit for savings/checking
-		                    // Add initial deposit transaction and notification
-		                    Transaction initialDeposit = new Transaction("Initial Deposit", deposit, currentDate);
-		                    newAccount.getHistory().addTransaction(initialDeposit);
-		                    Notification initialDepositNotification = new Notification(
-		                        "Initial Deposit Completed", 
-		                        "You deposited PHP " + deposit + " as initial deposit.", 
-		                        initialDeposit.getDate().toString(), initialDeposit.getId()
-		                    );
-		                    newAccount.addNotification(initialDepositNotification);
-		                }
-
-		                JOptionPane.showMessageDialog(null, "New account created successfully!\nYour Account Number: " + newAccount.getAccountNumber());
-		                dispose();
-		                Login login = new Login();
-		                login.setVisible(true);
-		                login.setLocationRelativeTo(null);
-		                return;
-		            }  
-		        } else {
-					return;
-				}
+		    // Validate input
+		    if (fullName.isEmpty() || phone.isEmpty() || email.isEmpty() || address.isEmpty() ||
+		        depositStr.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() ||
+		        (!savingsButton.isSelected() && !checkingButton.isSelected() && !loanButton.isSelected())) {
+		        JOptionPane.showMessageDialog(this, "Please complete all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+		        return;
 		    }
-			
-			// Create Customer
-			Customer customer = new Customer(fullName, dob, phone, email, address, password);
 
-			Account account = AccountFactory.createAccount(accountType, customer);
-			
-			BankLedger.getInstance().addAccount(account);
-			customer.addAccount(account);
-			
-			String transaction_1 = null;
+		    if (!phone.matches("\\d{10,11}")) {
+		        JOptionPane.showMessageDialog(this, "Invalid phone number (10–11 digits).", "Error", JOptionPane.ERROR_MESSAGE);
+		        return;
+		    }
+
+		    if (!email.contains("@") || !email.contains(".com")) {
+		        JOptionPane.showMessageDialog(this, "Invalid email address.", "Error", JOptionPane.ERROR_MESSAGE);
+		        return;
+		    }
+
+		    if (!password.equals(confirmPassword)) {
+		        JOptionPane.showMessageDialog(this, "Passwords do not match!", "Error", JOptionPane.ERROR_MESSAGE);
+		        return;
+		    }
+
+		    double deposit;
+		    try {
+		        deposit = Double.parseDouble(depositStr);
+		        if (deposit < 0) throw new NumberFormatException();
+		    } catch (NumberFormatException ex) {
+		        JOptionPane.showMessageDialog(this, "Invalid deposit amount.", "Error", JOptionPane.ERROR_MESSAGE);
+		        return;
+		    }
+
+		    String accountType = savingsButton.isSelected() ? "Savings" :
+		                         checkingButton.isSelected() ? "Checking" :
+		                         "Loan";
+
+		    Bank bank = BankLedger.getInstance().getBank();
+		    LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
+		    LocalDate now = LocalDate.now();
+
+		    // Check if customer already exists
+		    Customer existing = bank.findCustomerByEmail(email);
+		    if (existing != null) {
+		        int choice = JOptionPane.showConfirmDialog(this, 
+		            "An account already exists with this email. Open a new account for the same user?", 
+		            "Customer Found", JOptionPane.YES_NO_OPTION);
+
+		        if (choice == JOptionPane.NO_OPTION) return;
+
+		        boolean hasSameType = existing.getAccount().stream()
+		            .anyMatch(acc -> acc.getAccountType().equalsIgnoreCase(accountType));
+
+		        if (hasSameType) {
+		            JOptionPane.showMessageDialog(this, "You already have a " + accountType + " account.", 
+		                                          "Duplicate Account", JOptionPane.WARNING_MESSAGE);
+		            return;
+		        }
+
+		        Account newAccount = AccountFactory.createAccount(accountType, existing);
+		        if (accountType.equals("Loan")) {
+		            ((LoanAccount) newAccount).borrow(deposit);
+		        } else {
+		            newAccount.deposit(deposit);
+		        }
+		        String transaction_1 = null;
+				for (Transaction transaction1 : newAccount.getHistory().getHistoryList()) {
+					transaction_1 = transaction1.getId();
+				}
+
+		        String message = accountType.equals("Loan") ?
+		            "You borrowed PHP " + deposit + " on your Loan account." :
+		            "You deposited PHP " + deposit + " to your " + accountType + " account.";
+
+		        newAccount.addNotification(new Notification(
+		            accountType.equals("Loan") ? "Loan Disbursement" : "Initial Deposit",
+		            message,
+		            now.toString(),
+		            transaction_1
+		        ));
+
+		        existing.addAccount(newAccount);
+		        newAccount.addObserver(lowBalanceNotifier);
+		        bank.addAccount(newAccount);
+
+		        JOptionPane.showMessageDialog(this, "New account created!\nAccount No: " + newAccount.getAccountNumber());
+		        dispose();
+		        new Login().setVisible(true);
+		        return;
+		    }
+
+		    // Create new customer
+		    Customer newCustomer = new Customer(fullName, dob, phone, email, address, password);
+		    Account account = AccountFactory.createAccount(accountType, newCustomer);
+
+		    if (accountType.equals("Loan")) {
+		        ((LoanAccount) account).borrow(deposit);
+		    } else {
+		        account.deposit(deposit);
+		    }
+		    
+		    String transaction_1 = null;
 			for (Transaction transaction1 : account.getHistory().getHistoryList()) {
 				transaction_1 = transaction1.getId();
 			}
-			
-			// Register LowBalanceNotifier as an observer for the new account
-			LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
-			account.addObserver(lowBalanceNotifier);
-			
-			 LocalDate currentDate = LocalDate.now();
-			
-			if (loanButton.isSelected()) {
-			    ((LoanAccount) account).borrow(deposit);  // Handle loan-specific deposit (loan disbursement)
-			    // Add initial loan transaction and notification
-			    Transaction loanInitial = new Transaction("Loan Disbursement", deposit, currentDate);
-			    account.getHistory().addTransaction(loanInitial);
-			    Notification loanNotification = new Notification(
-			        "Loan Granted", 
-			        "You borrowed PHP " + deposit + " as your starting loan.", 
-			        loanInitial.getDate().toString(), transaction_1
-			    );
-			    account.addNotification(loanNotification);
 
-			} else {
-			    account.deposit(deposit);  // Handle deposit for savings/checking
-			    // Add initial deposit transaction and notification
-			    Transaction initialDeposit = new Transaction("Initial Deposit", deposit, currentDate);
-			    account.getHistory().addTransaction(initialDeposit);
-			    Notification initialDepositNotification = new Notification(
-			        "Initial Deposit Completed", 
-			        "You deposited PHP " + deposit + " as initial deposit.", 
-			        initialDeposit.getDate().toString(), transaction_1
-			    );
-			    account.addNotification(initialDepositNotification);
-			}
+		    String message = accountType.equals("Loan") ?
+		        "You borrowed PHP " + deposit + " on your Loan account." :
+		        "You deposited PHP " + deposit + " to your " + accountType + " account.";
 
+		    account.addNotification(new Notification(
+		        accountType.equals("Loan") ? "Loan Disbursement" : "Initial Deposit",
+		        message,
+		        now.toString(),
+		        transaction_1
+		    ));
 
-			JOptionPane.showMessageDialog(this, "Account created successfully!\nYour Account Number: " + account.getAccountNumber());
-			dispose();
-			Login login = new Login();
-			login.setVisible(true);
-			login.setLocationRelativeTo(null);
+		    account.addObserver(lowBalanceNotifier);
+		    newCustomer.addAccount(account);
+
+		    // ✅ These two lines are the missing part
+		    BankLedger.getInstance().addAccount(account); // <-- Add the customer to the ledger
+
+		    JOptionPane.showMessageDialog(this, "Account created!\nAccount No: " + account.getAccountNumber());
+		    dispose();
+		    new Login().setVisible(true);
 		});
+
 
 		savingsButton.addActionListener(e -> lblInitialDeposit.setText("Initial Deposit:"));
 		checkingButton.addActionListener(e -> lblInitialDeposit.setText("Initial Deposit:"));

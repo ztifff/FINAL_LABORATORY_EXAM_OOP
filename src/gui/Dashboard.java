@@ -1056,10 +1056,6 @@ public class Dashboard extends JFrame {
 			}
 
 		});
-
-
-
-
 	}
 
 	public void refreshNotifications(Account account) {
