@@ -636,6 +636,7 @@ public class BankController {
 		return true;
 	}
 
+	@SuppressWarnings("unused")
 	public void openEditTransactionDialog(DefaultTableModel tableModel, JTable table) {
 		int selectedRow = table.getSelectedRow();
 

@@ -1,7 +1,5 @@
 package observer;
 
-import javax.swing.JOptionPane;
-
 import model.Account;
 import model.CheckingAccount;
 import model.LoanAccount;

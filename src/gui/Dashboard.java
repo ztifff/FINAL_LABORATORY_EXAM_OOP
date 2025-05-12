@@ -5,8 +5,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Date;
-
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -17,7 +15,6 @@ import model.Account;
 import model.CheckingAccount;
 import model.LoanAccount;
 import model.Transaction;
-import observer.LowBalanceNotifier;
 import service.Notification;
 
 public class Dashboard extends JFrame {
@@ -33,10 +30,7 @@ public class Dashboard extends JFrame {
 	private JButton[] buttons;
 	private DefaultListModel<String> recentTransactionListModel;
 	private JPanel notificationContentPanel;
-	private String notification;
-
-
-
+	@SuppressWarnings("serial")
 	public Dashboard(Account account) {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
 		setTitle("Northland Bank");
@@ -1157,20 +1151,6 @@ public class Dashboard extends JFrame {
 		for (Notification notif : account.getNotifications()) {
 			addNotification(notif);
 		}
-	}
-
-	private JPanel createProfileRow(String label, String value, Font font) {
-	    JPanel row = new JPanel(new GridLayout(1, 2));
-	    row.setBackground(Color.WHITE);
-	    JLabel lbl1 = new JLabel(label);
-	    JLabel lbl2 = new JLabel(value);
-	    lbl1.setFont(font);
-	    lbl2.setFont(font);
-	    lbl1.setHorizontalAlignment(SwingConstants.RIGHT);
-	    lbl2.setHorizontalAlignment(SwingConstants.LEFT);
-	    row.add(lbl1);
-	    row.add(lbl2);
-	    return row;
 	}
 
 

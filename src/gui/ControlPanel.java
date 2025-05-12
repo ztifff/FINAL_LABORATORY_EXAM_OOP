@@ -3,11 +3,9 @@ import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.EventObject;
 import java.util.List;
@@ -19,18 +17,14 @@ import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
-import java.awt.SystemColor;
 import java.awt.Toolkit;
 
 import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -39,7 +33,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
@@ -50,8 +43,6 @@ import javax.swing.RowFilter;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.SpinnerDateModel;
-import javax.swing.SwingUtilities;
-import javax.swing.border.LineBorder;
 import javax.swing.event.CellEditorListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -63,23 +54,14 @@ import javax.swing.table.TableRowSorter;
 import controller.BankController;
 import data.Bank;
 import data.BankLedger;
-import factory.AccountFactory;
 import model.Account;
 import model.Admin;
-import model.CheckingAccount;
-import model.Customer;
 import model.LoanAccount;
-import model.SavingsAccount;
 import model.Transaction;
-import observer.LowBalanceNotifier;
-import service.Notification;
 import service.ReportGenerator;
 
 import javax.swing.SwingConstants;
 import java.awt.CardLayout;
-import javax.swing.JLayeredPane;
-import javax.swing.JInternalFrame;
-import javax.swing.JDesktopPane;
 
 public class ControlPanel extends JFrame {
 
@@ -99,6 +81,7 @@ public class ControlPanel extends JFrame {
 	private List<Account> customers = bank.getAllAccounts();
 	private JTextField textField_1;
 
+	@SuppressWarnings("serial")
 	public ControlPanel(Admin admin) {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
 		setTitle("Monthly Transaction Summary");

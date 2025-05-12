@@ -15,7 +15,7 @@ public class Customer {
 	public Customer(String name, String dob, String contactNumber, String email, String address, String password) {
 		
 		this.name = name;
-		this.dob = dob;
+		this.setDob(dob);
 		this. contactNumber = contactNumber;
 		this.email = email;
 		this.address = address;
@@ -70,6 +70,14 @@ public class Customer {
 	
 	public void setAccount(Account account) {
 		accounts.add(account);
+	}
+
+	public String getDob() {
+		return dob;
+	}
+
+	public void setDob(String dob) {
+		this.dob = dob;
 	}
 	
 	

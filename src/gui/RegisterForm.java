@@ -19,8 +19,10 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Date;
 
+@SuppressWarnings("serial")
 public class RegisterForm extends JFrame {
 
+	@SuppressWarnings("unused")
 	public RegisterForm() {
 		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
 		setTitle("Northland Bank Account Registration Form");

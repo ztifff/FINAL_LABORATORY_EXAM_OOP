@@ -11,12 +11,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.BorderLayout;
 import java.awt.Font;
-import java.awt.Graphics;
-
-import javax.swing.SwingConstants;
-import java.awt.FlowLayout;
 import javax.swing.JOptionPane;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -30,23 +25,14 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 
-import java.awt.Image;
 import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.Insets;
 import java.awt.Toolkit;
-import java.awt.GridLayout;
-import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
 import controller.AdminManager;
 import data.BankLedger;
-import factory.AccountFactory;
 import model.Account;
 import model.Admin;
-import model.Customer;
-
-import java.awt.CardLayout;
 
 public class Login extends JFrame {
 
