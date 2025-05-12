@@ -618,13 +618,31 @@ public class ControlPanel extends JFrame {
 			}
 		};
 
-		JTable table1 = new JTable(tableModel1);
+		JTable monthlyTransactionTable = new JTable(tableModel1){
+			@Override
+			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+				Component comp = super.prepareRenderer(renderer, row, column);
+				if (comp instanceof JComponent) {
+					Object value = getValueAt(row, column);
+					if (value != null) {
+						((JComponent) comp).setToolTipText(value.toString());
+					} else {
+						((JComponent) comp).setToolTipText(null);
+					}
+				}
+				return comp;
+			}
+		};
+		monthlyTransactionTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); 
+		monthlyTransactionTable.setEnabled(true);
+		monthlyTransactionTable.setRowSelectionAllowed(true);
+		monthlyTransactionTable.setColumnSelectionAllowed(false);
+		monthlyTransactionTable.setCellSelectionEnabled(false);
+		monthlyTransactionTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		monthlyTransactionTable.setRowHeight(30); 
+		monthlyTransactionTable.setFillsViewportHeight(true);
 
-		table1.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-		table1.setRowHeight(30); 
-		table1.setFillsViewportHeight(true); 
-
-		table1.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+		monthlyTransactionTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 					boolean hasFocus, int row, int column) {
@@ -639,14 +657,14 @@ public class ControlPanel extends JFrame {
 		});
 		refreshTransactionsTable(tableModel1);
 
-		JTableHeader header1 = table1.getTableHeader();
+		JTableHeader header1 = monthlyTransactionTable.getTableHeader();
 		header1.setFont(new Font("Segoe UI", Font.BOLD, 14));
 		header1.setBackground(new Color(220, 220, 220));
 		header1.setForeground(Color.BLACK);
 		header1.setReorderingAllowed(false);
 		header1.setResizingAllowed(false);
 
-		scrollPane = new JScrollPane(table1);
+		scrollPane = new JScrollPane(monthlyTransactionTable);
 		tablePanel.add(scrollPane, BorderLayout.CENTER);
 		montlyTransactionSummaryPanel1.add(tablePanel);
 
@@ -913,13 +931,32 @@ public class ControlPanel extends JFrame {
 			}
 		};
 
-		JTable table = new JTable(tableModel11) ;
-		table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-		table.setRowHeight(30);
-		table.setFillsViewportHeight(true);
+		JTable dailyTransactionReportTable = new JTable(tableModel11){
+			@Override
+			public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+				Component comp = super.prepareRenderer(renderer, row, column);
+				if (comp instanceof JComponent) {
+					Object value = getValueAt(row, column);
+					if (value != null) {
+						((JComponent) comp).setToolTipText(value.toString());
+					} else {
+						((JComponent) comp).setToolTipText(null);
+					}
+				}
+				return comp;
+			}
+		};
+		dailyTransactionReportTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); 
+		dailyTransactionReportTable.setEnabled(true);
+		dailyTransactionReportTable.setRowSelectionAllowed(true);
+		dailyTransactionReportTable.setColumnSelectionAllowed(false);
+		dailyTransactionReportTable.setCellSelectionEnabled(false);
+		dailyTransactionReportTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+		dailyTransactionReportTable.setRowHeight(30); 
+		dailyTransactionReportTable.setFillsViewportHeight(true);
 
 		// Table row striping and highlight
-		table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+		dailyTransactionReportTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 					boolean hasFocus, int row, int column) {
@@ -935,7 +972,7 @@ public class ControlPanel extends JFrame {
 		loadManageTransactions(tableModel11, customers);
 
 		// Styled header
-		JTableHeader header11 = table.getTableHeader();
+		JTableHeader header11 = dailyTransactionReportTable.getTableHeader();
 		header11.setFont(new Font("Segoe UI", Font.BOLD, 14));
 		header11.setBackground(new Color(220, 220, 220));
 		header11.setForeground(Color.BLACK);
@@ -943,7 +980,7 @@ public class ControlPanel extends JFrame {
 		header11.setResizingAllowed(false);
 
 		// ScrollPane for table
-		JScrollPane scrollPane = new JScrollPane(table);
+		JScrollPane scrollPane = new JScrollPane(dailyTransactionReportTable);
 		scrollPane.setBounds(10, 83, 939, 559);
 		dailyTransactionReport1.add(scrollPane);
 
@@ -959,7 +996,7 @@ public class ControlPanel extends JFrame {
 
 		// Create a TableRowSorter for your table model
 		TableRowSorter<DefaultTableModel> sorter = new TableRowSorter<>(tableModel11);
-		table.setRowSorter(sorter);
+		dailyTransactionReportTable.setRowSorter(sorter);
 
 		// Add sorting behavior to the dropdown
 		sortDropdown.addActionListener(e -> {
@@ -1160,6 +1197,22 @@ public class ControlPanel extends JFrame {
 		btnRefresh_3.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				loadManageTransactions(tableModel11, customers);
+				accountDropdown_1_1.removeAllItems(); 
+				List<String> accountList3 = new ArrayList<>();
+				accountList3.add("Select Option");
+
+				for (Account account : customers) {
+					String displayText = account.getOwner().getName() + " - " + account.getAccountNumber() + " - " + account.getAccountType();
+					accountList3.add(displayText);
+				}
+
+				// Sort alphabetically
+				List<String> accountsOnly2 = accountList3.subList(1, accountList3.size());
+				Collections.sort(accountsOnly2);
+				for (String accountDisplay : accountList3) {
+					accountDropdown_1_1.addItem(accountDisplay);  
+				}
+				
 			}
 		});
 
@@ -1243,9 +1296,15 @@ public class ControlPanel extends JFrame {
 				return comp;
 			}
 		};;
+		manageTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); 
+		manageTable.setEnabled(true);
+		manageTable.setRowSelectionAllowed(true);
+		manageTable.setColumnSelectionAllowed(false);
+		manageTable.setCellSelectionEnabled(false);
 		manageTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-		manageTable.setRowHeight(30);
+		manageTable.setRowHeight(30); 
 		manageTable.setFillsViewportHeight(true);
+		
 		manageTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
@@ -1421,10 +1480,15 @@ public class ControlPanel extends JFrame {
 				return comp;
 			}
 		};
-
+		accountBalanceTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); 
+		accountBalanceTable.setEnabled(true);
+		accountBalanceTable.setRowSelectionAllowed(true);
+		accountBalanceTable.setColumnSelectionAllowed(false);
+		accountBalanceTable.setCellSelectionEnabled(false);
 		accountBalanceTable.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-		accountBalanceTable.setRowHeight(30);
+		accountBalanceTable.setRowHeight(30); 
 		accountBalanceTable.setFillsViewportHeight(true);
+		
 		accountBalanceTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
 			@Override
 			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
@@ -1663,6 +1727,21 @@ public class ControlPanel extends JFrame {
 		btnRefresh_4.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				refreshAccountBalanceTable(balanceTableModel);
+				accountDropdown_1.removeAllItems(); 
+				List<String> accountList4 = new ArrayList<>();
+				accountList4.add("None");
+
+				for (Account account : customers) {
+					String displayText = account.getOwner().getName() + " - " + account.getAccountNumber() + " - " + account.getAccountType();
+					accountList4.add(displayText);
+				}
+
+				// Sort alphabetically
+				List<String> accountsOnly2 = accountList4.subList(1, accountList4.size());
+				Collections.sort(accountsOnly2);
+				for (String accountDisplay : accountList4) {
+					accountDropdown_1.addItem(accountDisplay);  
+				}
 			}
 		});
 		btnRefresh_4.setForeground(Color.WHITE);

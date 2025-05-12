@@ -643,6 +643,7 @@ public class Dashboard extends JFrame {
 		JPanel accountContentPanel = new JPanel();
 		accountContentPanel.setLayout(new GridLayout(4, 1, 20, 20));
 		accountContentPanel.setBackground(new Color(245, 245, 245));
+		accountContentPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
 		// Wrap accountContentPanel in a ScrollPane
 		JScrollPane accountScrollPane = new JScrollPane(accountContentPanel);
@@ -1158,7 +1159,19 @@ public class Dashboard extends JFrame {
 		}
 	}
 
-
+	private JPanel createProfileRow(String label, String value, Font font) {
+	    JPanel row = new JPanel(new GridLayout(1, 2));
+	    row.setBackground(Color.WHITE);
+	    JLabel lbl1 = new JLabel(label);
+	    JLabel lbl2 = new JLabel(value);
+	    lbl1.setFont(font);
+	    lbl2.setFont(font);
+	    lbl1.setHorizontalAlignment(SwingConstants.RIGHT);
+	    lbl2.setHorizontalAlignment(SwingConstants.LEFT);
+	    row.add(lbl1);
+	    row.add(lbl2);
+	    return row;
+	}
 
 
 }
