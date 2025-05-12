@@ -39,12 +39,12 @@ import java.awt.GridLayout;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
-import system.Account;
-import system.AccountFactory;
-import system.Admin;
-import system.AdminManager;
-import system.BankLedger;
-import system.Customer;
+import controller.AdminManager;
+import data.BankLedger;
+import factory.AccountFactory;
+import model.Account;
+import model.Admin;
+import model.Customer;
 
 import java.awt.CardLayout;
 

@@ -2,15 +2,6 @@ package gui;
 
 import javax.swing.*;
 
-import system.Account;
-import system.Bank;
-import system.BankLedger;
-import system.CheckingAccount;
-import system.LoanAccount;
-import system.LowBalanceNotifier;
-import system.Notification;
-import system.Transaction;
-
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -19,6 +10,15 @@ import java.util.Date;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+
+import data.Bank;
+import data.BankLedger;
+import model.Account;
+import model.CheckingAccount;
+import model.LoanAccount;
+import model.Transaction;
+import observer.LowBalanceNotifier;
+import service.Notification;
 
 public class Dashboard extends JFrame {
 	private static final long serialVersionUID = 1L;

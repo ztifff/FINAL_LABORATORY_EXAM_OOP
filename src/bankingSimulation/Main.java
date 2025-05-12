@@ -1,9 +1,14 @@
 package bankingSimulation;
 
 import gui.Login;
-import system.*;
+import model.*;
+import observer.LowBalanceNotifier;
+import service.Notification;
 
 import java.time.LocalDate;
+
+import data.BankLedger;
+import factory.AccountFactory;
 
 public class Main {
 
@@ -16,7 +21,7 @@ public class Main {
         LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
 
         // Test Customer 1: Loan + Checking
-        Customer testCustomer = new Customer("sad", "2025/12/12", "09443434332", "sad@.com", "street", "tas");
+        Customer testCustomer = new Customer("Jane Doe", "2025/12/12", "09443434332", "sad@.com", "street", "joe");
 
         Account checking = AccountFactory.createAccount("Checking", testCustomer);
         checking.deposit(2000);
@@ -42,7 +47,7 @@ public class Main {
         loan.addObserver(lowBalanceNotifier);
 
         // Test Customer 2: Only Checking
-        Customer testCustomer2 = new Customer("wat", "2025/12/12", "09443434332", "sad@.com", "street", "yat");
+        Customer testCustomer2 = new Customer("Jessa", "2025/12/12", "09443434332", "sad@.com", "street", "jes");
         Account checking2 = AccountFactory.createAccount("Checking", testCustomer2);
         checking2.deposit(2000);
         String checking2TxId = null;

@@ -2,15 +2,16 @@ package gui;
 
 import javax.swing.*;
 import javax.swing.border.*;
-import system.Account;
-import system.AccountFactory;
-import system.Bank;
-import system.BankLedger;
-import system.Customer;
-import system.LoanAccount;
-import system.LowBalanceNotifier;
-import system.Notification;
-import system.Transaction;
+
+import data.Bank;
+import data.BankLedger;
+import factory.AccountFactory;
+import model.Account;
+import model.Customer;
+import model.LoanAccount;
+import model.Transaction;
+import observer.LowBalanceNotifier;
+import service.Notification;
 
 import java.awt.*;
 import java.awt.event.*;
