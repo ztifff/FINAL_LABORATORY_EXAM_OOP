@@ -21,7 +21,7 @@ public class Main {
         LowBalanceNotifier lowBalanceNotifier = new LowBalanceNotifier();
 
         // Test Customer 1: Loan + Checking
-        Customer testCustomer = new Customer("Jane Doe", "2025/12/12", "09443434332", "sad@.com", "street", "joe");
+        Customer testCustomer = new Customer("Jane Doe", "2025/12/12", "09443434332", "joe@.com", "street", "joe");
 
         Account checking = AccountFactory.createAccount("Checking", testCustomer);
         checking.deposit(2000);
@@ -47,7 +47,7 @@ public class Main {
         loan.addObserver(lowBalanceNotifier);
 
         // Test Customer 2: Only Checking
-        Customer testCustomer2 = new Customer("Jessa", "2025/12/12", "09443434332", "sad@.com", "street", "jes");
+        Customer testCustomer2 = new Customer("Jessa", "2025/12/12", "09443434332", "jess@.com", "street", "jes");
         Account checking2 = AccountFactory.createAccount("Checking", testCustomer2);
         checking2.deposit(2000);
         String checking2TxId = null;
