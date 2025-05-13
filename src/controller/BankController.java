@@ -72,10 +72,10 @@ public class BankController {
 				double amount = Double.parseDouble(amountText);
 				BankLedger bankLedger = BankLedger.getInstance();
 				Account selectedAccount = bankLedger.getAccountByNumber(accNum);
-				
+				Account recipientAccount = null;
 				boolean transactionSuccess = false;
 				String transactionType = "";
-
+				
 				switch (type) {
 				    case "Deposit":
 				        if (selectedAccount instanceof LoanAccount) {
@@ -101,7 +101,7 @@ public class BankController {
 				            return;
 				        }
 				        String recipient = JOptionPane.showInputDialog("Enter recipient account number:");
-				        Account recipientAccount = bankLedger.getAccountByNumber(recipient);
+				        recipientAccount = bankLedger.getAccountByNumber(recipient);
 				        if (recipientAccount != null) {
 				            transactionSuccess = bank.transfer(recipientAccount, selectedAccount, amount);
 				            transactionType = "Transferred";
@@ -179,17 +179,14 @@ public class BankController {
 				        selectedAccount.addNotification(new Notification(
 				                "Withdrawal Made", "You withdrew PHP " + amount, LocalDate.now().toString(), transaction_1));
 				    } else if (transactionType.equals("Transferred")) {
-				        String recipient = JOptionPane.showInputDialog("Enter recipient account number:");
-				        Account recipientAccount = bankLedger.getAccountByNumber(recipient);
 				        if (recipientAccount != null) {
-				            selectedAccount.addNotification(new Notification(
-				                    "Transfer Sent", "You transferred PHP " + amount + " to " + recipient, LocalDate.now().toString(), transaction_1));
-				            recipientAccount.addNotification(new Notification(
-				                    "Transfer Received", "You received PHP " + amount + " from " + selectedAccount.getAccountNumber(), LocalDate.now().toString(), transaction_1));
+				        	recipientAccount.addNotification(new Notification(
+				                    "Transfer Sent", "You transferred PHP " + amount + " to " + selectedAccount.getOwner().getName(), LocalDate.now().toString(), transaction_1));
+				        	selectedAccount.addNotification(new Notification(
+				                    "Transfer Received", "You received PHP " + amount + " from " + recipientAccount.getOwner().getName(), LocalDate.now().toString(), transaction_1));
 				        }
 				    }
 
-				    JOptionPane.showMessageDialog(null, "Transaction successful!");
 				}
 
 
