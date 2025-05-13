@@ -343,10 +343,13 @@ public class RegisterForm extends JFrame {
 		        existing.addAccount(newAccount);
 		        newAccount.addObserver(lowBalanceNotifier);
 		        bank.addAccount(newAccount);
+		        BankLedger.getInstance().addAccount(newAccount);
 
 		        JOptionPane.showMessageDialog(this, "New account created!\nAccount No: " + newAccount.getAccountNumber());
 		        dispose();
-		        new Login().setVisible(true);
+		        Login login = new Login();
+				login.setVisible(true);
+				login.setLocationRelativeTo(null);
 		        return;
 		    }
 
@@ -384,7 +387,9 @@ public class RegisterForm extends JFrame {
 
 		    JOptionPane.showMessageDialog(this, "Account created!\nAccount No: " + account.getAccountNumber());
 		    dispose();
-		    new Login().setVisible(true);
+		    Login login = new Login();
+			login.setVisible(true);
+			login.setLocationRelativeTo(null);
 		});
 
 

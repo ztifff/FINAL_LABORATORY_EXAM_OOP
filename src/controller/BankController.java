@@ -82,7 +82,7 @@ public class BankController {
 				            JOptionPane.showMessageDialog(null, "You cannot directly use Deposit in Loan use Loan Repayment");
 				            return;
 				        }
-				        transactionSuccess = selectedAccount.deposit(amount);
+				        transactionSuccess = bank.deposit(selectedAccount, amount);
 				        transactionType = "Deposited";
 				        break;
 
@@ -91,7 +91,7 @@ public class BankController {
 				            JOptionPane.showMessageDialog(null, "You cannot directly use Withdraw in Loan use Borrow");
 				            return;
 				        }
-				        transactionSuccess = selectedAccount.withdraw(amount);
+				        transactionSuccess = bank.withdraw(selectedAccount, amount);
 				        transactionType = "Withdrawn";
 				        break;
 
@@ -103,7 +103,7 @@ public class BankController {
 				        String recipient = JOptionPane.showInputDialog("Enter recipient account number:");
 				        Account recipientAccount = bankLedger.getAccountByNumber(recipient);
 				        if (recipientAccount != null) {
-				            transactionSuccess = selectedAccount.transfer(recipientAccount, selectedAccount.getOwner(), amount);
+				            transactionSuccess = bank.transfer(recipientAccount, selectedAccount, amount);
 				            transactionType = "Transferred";
 				        } else {
 				            JOptionPane.showMessageDialog(null, "Recipient not found.");
@@ -268,15 +268,14 @@ public class BankController {
 				if (creationResult.startsWith("NEW:") || creationResult.startsWith("EXISTING:")) {
 					String accNum = creationResult.split(":")[1];
 					Account acc = getAccountByNumber(accNum);
-					Customer cust = acc.getOwner();
 
 					tableModel.addRow(new Object[]{
 							acc.getAccountNumber(),
-							cust.getName(),
-							cust.getEmail(),
-							cust.getContactNumber(),
+							acc.getOwner().getName(),
+							acc.getOwner().getEmail(),
+							acc.getOwner().getContactNumber(),
 							acc.getAccountType(),
-							cust.getPassword(),
+							acc.getOwner().getPassword(),
 							new JButton("Generate")
 					});
 
@@ -335,7 +334,7 @@ public class BankController {
 			Account newAccount = AccountFactory.createAccount(type, existingCustomer);
 			handleInitialAmount(newAccount, type, initialAmount);
 			existingCustomer.addAccount(newAccount);
-			bank.addAccount(newAccount);
+			bankLedger.addAccount(newAccount);
 			newAccount.addObserver(new LowBalanceNotifier());
 
 			return "EXISTING:" + newAccount.getAccountNumber();
