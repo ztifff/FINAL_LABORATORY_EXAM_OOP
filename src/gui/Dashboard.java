@@ -32,7 +32,9 @@ public class Dashboard extends JFrame {
 	private JPanel notificationContentPanel;
 	@SuppressWarnings("serial")
 	public Dashboard(Account account) {
-		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
+		setIconImage(Toolkit.getDefaultToolkit().getImage(
+			    getClass().getResource("/photo/bank.png")
+			));
 		setTitle("Northland Bank");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setSize(1200, 920);
@@ -228,7 +230,9 @@ public class Dashboard extends JFrame {
 		dashboardheaderpanel.add(lblNewLabel);
 		dashboardpanel2.add(dashboardheaderpanel, BorderLayout.NORTH);
 
-		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bankicon-removebg-preview.png");
+		ImageIcon originalIcon = new ImageIcon(
+			    getClass().getResource("/photo/bankicon-removebg-preview.png")
+			);
 		Image scaledImage = originalIcon.getImage().getScaledInstance(80, 70, Image.SCALE_SMOOTH); // width, height
 		ImageIcon resizedIcon = new ImageIcon(scaledImage);
 

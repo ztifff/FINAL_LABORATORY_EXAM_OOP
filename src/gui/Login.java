@@ -42,7 +42,10 @@ public class Login extends JFrame {
 	 * Create the frame.
 	 */
 	public Login() {
-		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
+		setIconImage(Toolkit.getDefaultToolkit().getImage(
+			    getClass().getResource("/photo/bank.png")
+			));
+
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setTitle("Northland Bank");
 		setSize(800, 657);
@@ -57,7 +60,9 @@ public class Login extends JFrame {
         loginPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40)); // Padding inside
 
         // Bank Icon
-        JLabel bankIcon = new JLabel(new ImageIcon("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bankicon-removebg-preview.png")); 
+        JLabel bankIcon = new JLabel(new ImageIcon(
+        	    getClass().getResource("/photo/bankicon-removebg-preview.png")
+        	)); 
         bankIcon.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         // Title

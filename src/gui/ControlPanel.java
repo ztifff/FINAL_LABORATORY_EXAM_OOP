@@ -83,7 +83,9 @@ public class ControlPanel extends JFrame {
 
 	@SuppressWarnings("serial")
 	public ControlPanel(Admin admin) {
-		setIconImage(Toolkit.getDefaultToolkit().getImage("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bank.png"));
+		setIconImage(Toolkit.getDefaultToolkit().getImage(
+			    getClass().getResource("/photo/bank.png")
+			));
 		setTitle("Monthly Transaction Summary");
 		setSize(1243, 831);
 		getContentPane().setLayout(null);
@@ -198,6 +200,16 @@ public class ControlPanel extends JFrame {
 		logoutBtn.setBounds(0, 700, 269, 85);
 		sidebar.add(logoutBtn);
 
+		logoutBtn.addActionListener(event -> {
+			int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Confirm", JOptionPane.YES_NO_OPTION);
+			if (confirm == JOptionPane.YES_OPTION) {
+				dispose();
+				Login login = new Login();
+				login.setVisible(true);
+				login.setLocationRelativeTo(null);
+			}
+		});
+
 		JPanel infoPanel = new JPanel();
 		infoPanel.setBounds(0, 604, 269, 85);
 		sidebar.add(infoPanel);
@@ -268,7 +280,10 @@ public class ControlPanel extends JFrame {
 		manageAccountsheaderpanel.add(lblmanageAccounts);
 		manageAccounts1.add(manageAccountsheaderpanel, BorderLayout.NORTH);
 
-		ImageIcon originalIcon = new ImageIcon("C:\\Users\\justf\\eclipse-workspace\\FINAL_LABORATORY_EXAM_OOP\\src\\photo\\bankicon-removebg-preview.png");
+		ImageIcon originalIcon = new ImageIcon(
+			    getClass().getResource("/photo/bankicon-removebg-preview.png")
+			);
+
 		Image scaledImage = originalIcon.getImage().getScaledInstance(80, 70, Image.SCALE_SMOOTH); // width, height
 		ImageIcon resizedIcon = new ImageIcon(scaledImage);
 
@@ -860,22 +875,6 @@ public class ControlPanel extends JFrame {
 				JOptionPane.showMessageDialog(montlyTransactionSummaryPanel1, "Invalid date format. Please use MM/dd/yyyy.");
 			}
 		});
-
-
-
-
-		logoutBtn.addActionListener(event -> {
-			int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to logout?", "Confirm", JOptionPane.YES_NO_OPTION);
-			if (confirm == JOptionPane.YES_OPTION) {
-				dispose();
-				Login login = new Login();
-				login.setVisible(true);
-				login.setLocationRelativeTo(null);
-			}
-		});
-
-
-
 
 
 		JPanel dailyTransactionReportPanel = new JPanel();
