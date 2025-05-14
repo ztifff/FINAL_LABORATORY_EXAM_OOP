@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import model.Account;
 import model.LoanAccount;
 import model.Transaction;
@@ -97,7 +96,6 @@ public class ReportGenerator {
         return report.toString();
     }
 
- // For Daily Deposits and Withdrawals Report
     public static String generateDailyDepositsAndWithdrawalsReport(Account account, String date) {
         StringBuilder report = new StringBuilder();
         report.append("📅 DAILY TRANSACTION SUMMARY\n")

@@ -26,8 +26,6 @@ public class TransactionHistory {
 		}
         return null; 
     }
-
-
     
     public List<Transaction> getHistoryList() {
         return transactions;
